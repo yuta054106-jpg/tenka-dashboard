@@ -34,6 +34,16 @@
       colors: { h: '#d99a5b', c: '#3d7be0', a: '#ffffff' },
       rows: { 1: '...hhhhhhhhhh...', 5: '..hhsshhsshhhh..' },
     },
+    'ヨウタンワ': {
+      role: 'デザイン', kanji: '楊端和', job: 'デザイナー',
+      colors: { h: '#2a2230', c: '#2f6b4f', a: '#e8d9b0', p: '#d94343' },
+      rows: { 0: '..pp........pp..', 4: '..aaaaaaaaaaaa..', 11: '..hssssssssssh..', 12: '..hhcccccccchh..' },
+    },
+    'キョウカイ': {
+      role: 'フロント', kanji: '羌瘣', job: 'フロントエンド',
+      colors: { h: '#4a3b52', c: '#5a4fa8', a: '#cfd3e6' },
+      rows: { 5: '..hhhhhhhhhhhh..', 11: '..hssssssssssh..' },
+    },
     'テン': {
       role: 'CMO', kanji: '河了貂', job: 'ぐんし',
       colors: { h: '#3b3546', c: '#ff8c42', a: '#ffe08a', p: '#ffffff' },
@@ -48,6 +58,11 @@
       role: 'COO', kanji: '信', job: 'せんし',
       colors: { h: '#262626', c: '#d94343', a: '#e9c9a0' },
       rows: { 0: '..h..hh..hh..h..', 1: '..hhhhhhhhhhhh..' },
+    },
+    'オウホン': {
+      role: '品質管理', kanji: '王賁', job: '品質管理',
+      colors: { h: '#3b2a20', c: '#1f3b73', a: '#f2c94c', p: '#f2c94c' },
+      rows: { 0: '.......pp.......', 1: '....hhhpphhh....', 7: '..hssssssssssh..', 8: '..hsskksskkssh..' },
     },
     'オーナー': {
       role: 'OWNER', kanji: '', job: 'おうさま',
