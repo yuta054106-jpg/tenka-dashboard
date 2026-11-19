@@ -342,12 +342,9 @@ function render(s) {
   const hb = s.ops.heartbeat;
   const last = hb?.last_run || null;
   const lastAgo = last ? (Date.now() - new Date(last)) / 3600000 : Infinity;
-  const jstHour = (new Date().getUTCHours() + 9) % 24;
-  const inHours = jstHour >= 9 && jstHour <= 23;
   let st;
   if (!last) st = ['idle', 'まだ巡回の記録がありません'];
   else if (lastAgo <= 2.5) st = ['ok', 'オウセンは稼働中'];
-  else if (!inHours && lastAgo <= 12) st = ['idle', '夜間は休止中（9時に再開）'];
   else st = ['warn', '巡回が止まっている可能性があります'];
   const rows = [
     ['最終巡回', last ? `${fmtTime(last)}（${ago(last)}）` : '—'],

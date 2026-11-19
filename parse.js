@@ -122,14 +122,15 @@
     return null;
   }
 
-  // クラウドのオウセンは毎日 9:00〜23:00（日本時間）の奇数時に起動する
-  const RUN_HOURS_JST = [9, 11, 13, 15, 17, 19, 21, 23];
+  // クラウドのオウセンは24時間、2時間おき（日本時間の奇数時の20分：1:20・3:20…23:20）に巡回する
+  const RUN_HOURS_JST = [1, 3, 5, 7, 9, 11, 13, 15, 17, 19, 21, 23];
+  const RUN_MINUTE = 20;
   function nextRun(now) {
     now = now || new Date();
     const jst = new Date(now.getTime() + 9 * 3600e3);
     for (let d = 0; d < 2; d++) {
       for (const h of RUN_HOURS_JST) {
-        const t = Date.UTC(jst.getUTCFullYear(), jst.getUTCMonth(), jst.getUTCDate() + d, h) - 9 * 3600e3;
+        const t = Date.UTC(jst.getUTCFullYear(), jst.getUTCMonth(), jst.getUTCDate() + d, h, RUN_MINUTE) - 9 * 3600e3;
         if (t > now.getTime()) return new Date(t).toISOString();
       }
     }
