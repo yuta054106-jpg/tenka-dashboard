@@ -47,6 +47,17 @@
     return m[1].split(/\r?\n/).map((l) => l.replace(/^\s*[-*]\s*(\[.\]\s*)?/, '').trim()).filter(Boolean);
   }
 
+  // 「## 日程」の表（| 予定日 | 作業 | 担当 | 状態 |）を読む。見出し行・区切り行・ひな形の行は除く
+  function schedule(md) {
+    const m = md.match(/^##\s+日程\s*$([\s\S]*?)(?=^##\s|(?![\s\S]))/m);
+    if (!m) return [];
+    return m[1].split(/\r?\n/)
+      .filter((l) => /^\s*\|/.test(l))
+      .map((l) => l.trim().replace(/^\||\|$/g, '').split('|').map((c) => c.trim()))
+      .filter((c) => c.length >= 2 && /^\d{4}-\d{2}-\d{2}/.test(c[0]))
+      .map((c) => ({ date: c[0], task: c[1] || '', who: c[2] || '', state: c[3] || '' }));
+  }
+
   const blank = (v) => !v || /^（.*）$/.test(v) || /YYYY/.test(v) || v.includes(' / ');
   const base = (p) => p.split('/').pop();
 
@@ -58,7 +69,10 @@
       const { out: f, clean } = fields(md);
       const done = (clean.match(/^\s*-\s*\[x\]/gim) || []).length;
       const todo = (clean.match(/^\s*-\s*\[ \]\s*\S/gm) || []).length;
+      // 進捗：「進捗」の数字 → なければ日程の完了の割合 → なければタスクのチェックの割合
+      const sched = schedule(clean);
       let progress = parseInt(f['進捗'], 10);
+      if (Number.isNaN(progress) && sched.length) progress = Math.round((sched.filter((r) => /完了/.test(r.state)).length / sched.length) * 100);
       if (Number.isNaN(progress)) progress = done + todo ? Math.round((done / (done + todo)) * 100) : 0;
       list.push({
         folder: m[1],
@@ -75,6 +89,7 @@
         owner: blank(f['担当']) ? 'オウセン' : f['担当'],
         next: f['次のアクション'] || '',
         questions: section(clean, 'オーナーへの確認事項'),
+        schedule: sched,
         tasks: { done, todo },
       });
     }

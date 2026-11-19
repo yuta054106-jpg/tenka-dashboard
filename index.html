@@ -81,6 +81,23 @@
   .q-meta .reward { color: var(--gold); }
   .risk { color: var(--low); border: 2px solid var(--low); border-radius: 4px; padding: 0 6px; font-size: 12px; }
   .q-risk { grid-column: 2 / -1; font-size: 13px; color: var(--low); }
+  /* 日程 */
+  .sched { grid-column: 2 / -1; font-size: 13px; margin-top: 2px; }
+  .sched summary { cursor: pointer; color: var(--sub); list-style: none; }
+  .sched summary::-webkit-details-marker { display: none; }
+  .sched summary::before { content: "▶ "; font-size: 10px; }
+  .sched[open] summary::before { content: "▼ "; }
+  .sched ol { list-style: none; margin: 6px 0 0; padding: 0; display: grid; gap: 4px;
+    border-left: 2px solid #ffffff33; padding-left: 10px; }
+  .sched li { display: grid; grid-template-columns: 18px 64px minmax(0, 1fr); gap: 2px 6px; align-items: baseline; }
+  .sched .mk { text-align: center; }
+  .sched .dt { color: var(--sub); font-variant-numeric: tabular-nums; white-space: nowrap; }
+  .sched .tk { overflow-wrap: anywhere; }
+  .sched .tk small { color: var(--faint); margin-left: 4px; }
+  .sched li.done { color: var(--faint); }
+  .sched li.done .mk { color: var(--hp); }
+  .sched li.doing .mk { color: var(--gold); }
+  .sched li.late, .sched li.late .dt { color: var(--low); }
   .q-next { grid-column: 2 / -1; font-size: 13px; color: var(--text); }
   .q-next::before { content: "次 ▷ "; color: var(--sub); }
   .due.soon { color: var(--mid); }
@@ -269,6 +286,35 @@ function dueLabel(due, label = '納期') {
   const txt = d < 0 ? `${-d}日超過` : d === 0 ? '本日まで' : `あと${d}日`;
   return `<span class="due ${cls}">${label} ${esc(due)}（${txt}）</span>`;
 }
+// 日程の表示（完了 ✓・進行中 ▶・未着手 ・。予定日を過ぎて未完了なら赤）
+const closedSchedules = new Set(); // 閉じた日程（最初は開いて表示。閉じたら再描画しても閉じたまま）
+function scheduleHtml(rows) {
+  if (!rows || !rows.length) return '';
+  const doneCount = rows.filter((r) => /完了/.test(r.state)).length;
+  const items = rows.map((r) => {
+    const done = /完了/.test(r.state);
+    const doing = !done && /進行|作業中|制作中/.test(r.state);
+    const d = daysLeft(r.date);
+    const late = !done && d !== null && d < 0;
+    const cls = done ? 'done' : late ? 'late' : doing ? 'doing' : '';
+    const mk = done ? '✓' : doing ? '▶' : '・';
+    const m = r.date.match(/\d{4}-(\d{2})-(\d{2})(.*)/);
+    const date = m ? `${+m[1]}/${+m[2]}` : r.date;
+    const tag = /社内締切/.test(m ? m[3] : '') ? ' <small>社内締切</small>' : '';
+    return `<li class="${cls}"><span class="mk">${mk}</span><span class="dt">${esc(date)}${late ? ' 遅れ' : ''}</span>
+      <span class="tk">${esc(r.task)}${tag}${r.who ? `<small>${esc(r.who)}</small>` : ''}</span></li>`;
+  }).join('');
+  const key = rows.map((r) => r.date + r.task).join('|');
+  return `<details class="sched" data-key="${esc(key)}" ${closedSchedules.has(key) ? "" : "open"}>
+    <summary>日程（${doneCount}/${rows.length} 完了）</summary><ol>${items}</ol></details>`;
+}
+document.addEventListener('toggle', (ev) => {
+  const el = ev.target;
+  if (el.classList && el.classList.contains('sched')) {
+    if (el.open) closedSchedules.delete(el.dataset.key); else closedSchedules.add(el.dataset.key);
+  }
+}, true);
+
 const hpColor = (p) => (p >= 70 ? 'var(--hp)' : p >= 30 ? 'var(--mid)' : 'var(--low)');
 
 // ---- メッセージウィンドウ（文字送り） ----
@@ -327,6 +373,7 @@ function render(s) {
       <div class="who"><span class="avatar">${face(p.owner)}</span>${esc(p.owner)}</div>
       ${p.risk ? `<div class="q-risk">遅れの理由 ▷ ${esc(p.risk)}</div>` : ''}
       ${p.next ? `<div class="q-next">${esc(p.next)}</div>` : ''}
+      ${scheduleHtml(p.schedule)}
     </div>`;
   };
   $('projects').innerHTML = active.length ? active.map(quest).join('')
