@@ -10,6 +10,7 @@
       || /^05_projects\/_inbox\/[^_/][^/]*\.md$/.test(p)
       || /^00_board\/decisions\/[^_/][^/]*\.md$/.test(p)
       || /^03_reports\/(daily|weekly|monthly)\/\d{4}-\d{2}-\d{2}[^/]*\.md$/.test(p)
+      || /^00_board\/answers\/(done\/)?[^_/][^/]*\.md$/.test(p)
       || p === '03_reports/heartbeat.json'
       || p === '01_company/profile.md';
   }
@@ -110,6 +111,7 @@
         const p = names[names.length - 1];
         const md = files[p];
         return {
+          path: p,
           date: base(p).slice(0, 10),
           kind,
           summary: section(md, 'ひとことで').join(' '),
@@ -149,12 +151,52 @@
     return blank(n) ? '' : n;
   }
 
+  // ---- オーナー確認事項と回答 ----
+  // 確認事項の ID：出どころ（ファイル）と文面から作る短いハッシュ。回答ファイルとの突き合わせに使う
+  function askId(target, text) {
+    let h = 0x811c9dc5;
+    const s = target + '|' + text;
+    for (let i = 0; i < s.length; i++) { h ^= s.charCodeAt(i); h = Math.imul(h, 0x01000193) >>> 0; }
+    return h.toString(16).padStart(8, '0');
+  }
+
+  // 00_board/answers/（未反映）と 00_board/answers/done/（反映済み）の回答
+  function answers(files) {
+    const out = {};
+    for (const [p, md] of Object.entries(files)) {
+      const m = p.match(/^00_board\/answers\/(done\/)?[^_/][^/]*\.md$/);
+      if (!m) continue;
+      const id = fields(md).out['回答ID'];
+      if (id) out[id] = { done: !!m[1], answer: fields(md).out['回答'] || '' };
+    }
+    return out;
+  }
+
+  // オーナーに確認してほしいことの一覧（回答済みで反映済みのものは除く）
+  function asks(st, ans) {
+    const list = [];
+    const add = (kind, target, from, text) => {
+      const id = askId(target, text);
+      const a = ans[id];
+      if (a && a.done) return;
+      list.push({ id, kind, target, from, text, answered: a ? a.answer : null });
+    };
+    const r = st.report;
+    if (r) r.asks.forEach((t) => add('報告', r.path, `オウセンの報告（${r.date}）`, t));
+    st.projects.forEach((p) => p.questions.forEach((q) => add('確認事項', `05_projects/${p.folder}/README.md`, p.name, q)));
+    st.decisions.forEach((d) => add('決裁', `00_board/decisions/${d.file}`, '承認待ち', `決裁: ${d.name}`));
+    st.projects
+      .filter((p) => p.stage === '納品待ち')
+      .forEach((p) => add('納品', `05_projects/${p.folder}/README.md`, p.name, '納品物をクライアントへ送る'));
+    return list;
+  }
+
   function buildState(files, extra) {
     extra = extra || {};
     let hb = null;
     try { hb = JSON.parse(files['03_reports/heartbeat.json'] || ''); } catch (e) { hb = null; }
     const list = projects(files);
-    return {
+    const st = {
       company: companyName(files),
       projects: list,
       team: team(list),
@@ -165,9 +207,32 @@
       sync: extra.sync || { at: null, ok: null, message: '' },
       now: new Date().toISOString(),
     };
+    st.asks = asks(st, answers(files));
+    return st;
   }
 
-  const api = { wanted, narrow, buildState };
+  // 回答ファイル（00_board/answers/ に置く。オウセンが反映したら done/ へ移す）の中身
+  function answerFile(ask, answer, comment, at) {
+    const one = (s) => String(s || '').replace(/\r?\n/g, ' ').trim();
+    return [
+      '# オーナーの回答',
+      '',
+      `- 回答ID: ${ask.id}`,
+      `- 種類: ${ask.kind}`,
+      `- 対象: ${ask.target}`,
+      `- 出どころ: ${one(ask.from)}`,
+      `- 質問: ${one(ask.text)}`,
+      `- 回答: ${answer}`,
+      `- コメント: ${one(comment) || 'なし'}`,
+      `- 回答日時: ${at}`,
+      '',
+    ].join('\n');
+  }
+
+  // 回答ファイルの置き場所（日時と ID で一意にする）
+  const answerPath = (ask, at) => `00_board/answers/${at.replace(/[-:]/g, '').slice(0, 15)}_${ask.id}.md`;
+
+  const api = { wanted, narrow, buildState, answerFile, answerPath };
   if (typeof module !== 'undefined' && module.exports) module.exports = api;
   else root.Parse = api;
 })(this);

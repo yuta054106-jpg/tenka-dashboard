@@ -116,6 +116,11 @@
   ul.list li { padding-left: 20px; position: relative; overflow-wrap: anywhere; }
   ul.list li::before { content: "◆"; position: absolute; left: 0; color: var(--gold); font-size: 11px; top: 3px; }
   ul.list li .from { display: block; color: var(--sub); font-size: 12px; }
+  .ans { display: flex; gap: 6px; margin-top: 6px; }
+  .ans input { flex: 1; min-width: 0; font: inherit; font-size: 14px; color: var(--text); background: #111;
+    border: 2px solid var(--line); border-radius: 6px; padding: 4px 8px; }
+  .ans button { padding: 4px 12px; }
+  .answered { color: var(--hp); font-size: 12px; margin-top: 4px; }
   .empty { color: var(--faint); font-size: 14px; padding: 10px 2px; }
 
   /* メッセージウィンドウ */
@@ -288,11 +293,10 @@ function render(s) {
   const finished = s.projects.length - active.length;
   const dueSoon = active.filter((p) => { const d = daysLeft(p.due); return d !== null && d <= 7; });
 
-  const asks = [];
-  (s.report?.asks || []).forEach((a) => asks.push({ text: a, from: `オウセンの報告（${s.report.date}）` }));
-  s.projects.forEach((p) => p.questions.forEach((q) => asks.push({ text: q, from: p.name })));
-  s.decisions.forEach((d) => asks.push({ text: `決裁: ${d.name}`, from: '承認待ち' }));
-  active.filter((p) => p.stage === '納品待ち').forEach((p) => asks.push({ text: '納品物をクライアントへ送る', from: p.name }));
+  // オーナー確認事項（parse.js が作る。回答済み・反映待ちのものは answered に回答が入る）
+  const allAsks = s.asks || [];
+  const asks = allAsks.filter((a) => !a.answered);
+  askMap = Object.fromEntries(allAsks.map((a) => [a.id, a]));
 
   $('k-active').innerHTML = `${active.length}<small>件</small>`;
   $('k-inbox').innerHTML = `${s.inbox.length}<small>件</small>`;
@@ -352,8 +356,17 @@ function render(s) {
     + rows.map(([k, v]) => `<div class="row"><span>${k}</span><span>${v}</span></div>`).join('');
 
   // 報告
-  $('asks').innerHTML = asks.length
-    ? `<ul class="list">${asks.map((a) => `<li><span class="from">${esc(a.from)}</span>${esc(a.text)}</li>`).join('')}</ul>`
+  // 回答を入力中は描き直さない（入力欄のフォーカスが外れるため）
+  if (!document.activeElement?.classList.contains('ans-c')) $('asks').innerHTML = allAsks.length
+    ? `<ul class="list">${allAsks.map((a) => `<li><span class="from">${esc(a.from)}</span>${esc(a.text)}
+        ${a.answered
+          ? `<div class="answered">回答済み（${esc(a.answered)}）・オウセンの反映待ち</div>`
+          : `<div class="ans">
+              <input class="ans-c" data-id="${a.id}" placeholder="ひとこと（任意）" value="${esc(drafts[a.id] || '')}">
+              <button data-ans="OK" data-id="${a.id}">OK</button>
+              <button data-ans="NG" data-id="${a.id}">NG</button>
+            </div>`}
+      </li>`).join('')}</ul>`
     : `<div class="empty">ありません</div>`;
 
   // 依頼
@@ -455,6 +468,73 @@ async function load() {
     loading = false;
   }
 }
+
+// ---- オーナー確認事項への回答 ----
+let askMap = {};
+const drafts = {}; // 入力中のひとこと（再描画で消えないように覚えておく）
+
+function utf8Base64(text) {
+  const bytes = new TextEncoder().encode(text);
+  let bin = '';
+  for (const b of bytes) bin += String.fromCharCode(b);
+  return btoa(bin);
+}
+
+async function saveAnswer(ask, answer, comment) {
+  const at = new Date().toISOString();
+  if (LOCAL) {
+    const r = await fetch('/api/answer', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ ask, answer, comment, at }),
+    });
+    if (!r.ok) throw new Error(await r.text());
+    return;
+  }
+  const repo = store.get('gh_repo');
+  const path = Parse.answerPath(ask, at);
+  const r = await fetch(`https://api.github.com/repos/${repo}/contents/${path}`, {
+    method: 'PUT',
+    headers: {
+      Authorization: 'Bearer ' + store.get('gh_token'),
+      Accept: 'application/vnd.github+json',
+      'X-GitHub-Api-Version': '2022-11-28',
+    },
+    body: JSON.stringify({ message: `オーナーの回答: ${answer}（${ask.from}）`, content: utf8Base64(Parse.answerFile(ask, answer, comment, at)) }),
+  });
+  if (r.status === 403 || r.status === 404) {
+    const e = new Error('トークンに書き込みの権限がありません。Contents を「Read and write」にしたトークンを作り直し、⚙ から入れ直してください。');
+    e.permission = true;
+    throw e;
+  }
+  if (!r.ok) throw new Error('GitHub に保存できませんでした（' + r.status + '）');
+}
+
+$('asks').addEventListener('input', (ev) => {
+  if (ev.target.classList.contains('ans-c')) drafts[ev.target.dataset.id] = ev.target.value;
+});
+$('asks').addEventListener('click', async (ev) => {
+  const btn = ev.target.closest('button[data-ans]');
+  if (!btn) return;
+  const ask = askMap[btn.dataset.id];
+  if (!ask) return;
+  const answer = btn.dataset.ans;
+  const comment = drafts[ask.id] || '';
+  if (answer === 'NG' && !comment.trim()) {
+    say('NGのときは、理由やどうしてほしいかを\nひとこと書いてから押してください。');
+    return;
+  }
+  btn.closest('.ans').querySelectorAll('button,input').forEach((el) => { el.disabled = true; });
+  try {
+    await saveAnswer(ask, answer, comment);
+    delete drafts[ask.id];
+    say(`オウセン「回答を受け取りました（${answer}）。\nすぐに反映します。」`);
+    setTimeout(load, 1500);
+  } catch (e) {
+    say(e.message);
+    btn.closest('.ans').querySelectorAll('button,input').forEach((el) => { el.disabled = false; });
+  }
+});
 
 $('setup-form').onsubmit = (ev) => {
   ev.preventDefault();
