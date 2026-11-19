@@ -116,10 +116,14 @@
   ul.list li { padding-left: 20px; position: relative; overflow-wrap: anywhere; }
   ul.list li::before { content: "◆"; position: absolute; left: 0; color: var(--gold); font-size: 11px; top: 3px; }
   ul.list li .from { display: block; color: var(--sub); font-size: 12px; }
-  .ans { display: flex; gap: 6px; margin-top: 6px; }
-  .ans input { flex: 1; min-width: 0; font: inherit; font-size: 14px; color: var(--text); background: #111;
-    border: 2px solid var(--line); border-radius: 6px; padding: 4px 8px; }
-  .ans button { padding: 4px 12px; }
+  /* 回答欄：入力欄は1行まるごと、ボタンはその下に右寄せ。
+     入力欄の文字は 16px 以上（iPhone は 16px 未満の入力欄に触れると画面を拡大し、はみ出して見えるため） */
+  .ans { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 6px; margin-top: 6px; max-width: 100%; }
+  .ans input { flex: 1 1 100%; width: 100%; min-width: 0; box-sizing: border-box; font: inherit; font-size: 16px;
+    color: var(--text); background: #111; border: 2px solid var(--line); border-radius: 6px; padding: 6px 8px;
+    -webkit-appearance: none; appearance: none; }
+  .ans button { padding: 4px 18px; }
+  ul.list li { min-width: 0; }
   .answered { color: var(--hp); font-size: 12px; margin-top: 4px; }
   .empty { color: var(--faint); font-size: 14px; padding: 10px 2px; }
 
