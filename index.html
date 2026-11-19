@@ -79,6 +79,8 @@
   .q-name { font-size: 17px; overflow-wrap: anywhere; }
   .q-meta { color: var(--sub); font-size: 13px; display: flex; flex-wrap: wrap; gap: 2px 14px; }
   .q-meta .reward { color: var(--gold); }
+  .risk { color: var(--low); border: 2px solid var(--low); border-radius: 4px; padding: 0 6px; font-size: 12px; }
+  .q-risk { grid-column: 2 / -1; font-size: 13px; color: var(--low); }
   .q-next { grid-column: 2 / -1; font-size: 13px; color: var(--text); }
   .q-next::before { content: "次 ▷ "; color: var(--sub); }
   .due.soon { color: var(--mid); }
@@ -260,12 +262,12 @@ function daysLeft(due) {
   const today = new Date(); today.setHours(0, 0, 0, 0);
   return Math.round((new Date(+m[1], m[2] - 1, +m[3]) - today) / 86400000);
 }
-function dueLabel(due) {
+function dueLabel(due, label = '納期') {
   const d = daysLeft(due);
-  if (d === null) return `<span class="due">納期 ${due ? esc(due) : '未定'}</span>`;
+  if (d === null) return `<span class="due">${label} ${due ? esc(due) : '未定'}</span>`;
   const cls = d < 0 ? 'over' : d <= 3 ? 'soon' : '';
   const txt = d < 0 ? `${-d}日超過` : d === 0 ? '本日まで' : `あと${d}日`;
-  return `<span class="due ${cls}">納期 ${esc(due)}（${txt}）</span>`;
+  return `<span class="due ${cls}">${label} ${esc(due)}（${txt}）</span>`;
 }
 const hpColor = (p) => (p >= 70 ? 'var(--hp)' : p >= 30 ? 'var(--mid)' : 'var(--low)');
 
@@ -293,7 +295,7 @@ function render(s) {
   $('h-avatar').innerHTML = Sprites.svg('オウセン', 52);
 
   const active = s.projects.filter((p) => !['納品済み', '中止'].includes(p.stage))
-    .sort((a, b) => (daysLeft(a.due) ?? 9999) - (daysLeft(b.due) ?? 9999));
+    .sort((a, b) => (daysLeft(a.internalDue || a.due) ?? 9999) - (daysLeft(b.internalDue || b.due) ?? 9999));
   const finished = s.projects.length - active.length;
   const dueSoon = active.filter((p) => { const d = daysLeft(p.due); return d !== null && d <= 7; });
 
@@ -316,13 +318,14 @@ function render(s) {
       <span class="cursor">▶</span>
       <div>
         <div class="q-name">${esc(p.name)}</div>
-        <div class="q-meta">${[p.client, p.kind].filter(Boolean).map((x) => `<span>${esc(x)}</span>`).join('')}${p.amount ? `<span class="reward">${esc(p.amount)}</span>` : ''}${dueLabel(p.due)}</div>
+        <div class="q-meta">${[p.client, p.kind].filter(Boolean).map((x) => `<span>${esc(x)}</span>`).join('')}${p.amount ? `<span class="reward">${esc(p.amount)}</span>` : ''}${dueLabel(p.due)}${p.internalDue ? dueLabel(p.internalDue, '社内締切') : ''}${p.risk ? '<span class="risk">遅れそう</span>' : ''}</div>
       </div>
       <div class="bars">
         <span class="stage" style="color:${color}">【${esc(p.stage)}】</span> <span class="num">${p.progress}%</span>
         <div class="bar"><i style="width:${p.progress}%;background:${hpColor(p.progress)}"></i></div>
       </div>
       <div class="who"><span class="avatar">${face(p.owner)}</span>${esc(p.owner)}</div>
+      ${p.risk ? `<div class="q-risk">遅れの理由 ▷ ${esc(p.risk)}</div>` : ''}
       ${p.next ? `<div class="q-next">${esc(p.next)}</div>` : ''}
     </div>`;
   };
@@ -380,6 +383,8 @@ function render(s) {
   if (s.sync.ok === false) msgs.push('オウセン「GitHubと同期できていません。\nネットの接続を確認してください。」');
   if (asks.length) msgs.push(`オウセン「オーナー、確認してほしいことが${asks.length}件あります。」`);
   const over = active.filter((p) => daysLeft(p.due) !== null && daysLeft(p.due) < 0);
+  const risky = active.filter((p) => p.risk)
+  if (risky.length) msgs.push(`オウセン「${risky[0].name}が遅れそうです。\n確認事項に対策を出しました。」`)
   if (over.length) msgs.push(`オウセン「${over[0].name}の納期を過ぎています。\nすぐに対応します。」`);
   if (active.length) {
     msgs.push(`オウセン「いま${active.length}件の案件を進めています。\nいちばん急ぐのは ${active[0].name}です。」`);

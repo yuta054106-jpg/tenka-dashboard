@@ -67,6 +67,9 @@
         kind: blank(f['種別']) ? '' : f['種別'],
         amount: blank(f['金額']) ? '' : f['金額'],
         due: blank(f['納期']) ? '' : f['納期'],
+        // 社内締切（納品待ちにする期限。原則、納期の2日前）と遅れリスク（「あり：理由」）
+        internalDue: blank(f['社内締切']) ? '' : f['社内締切'],
+        risk: /^あり/.test(f['遅れリスク'] || '') ? (f['遅れリスク'].replace(/^あり\s*[:：]?\s*/, '') || '理由未記入') : '',
         stage: blank(f['ステージ']) ? '要件定義' : f['ステージ'],
         progress: Math.max(0, Math.min(100, progress)),
         owner: blank(f['担当']) ? 'オウセン' : f['担当'],
