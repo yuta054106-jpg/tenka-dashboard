@@ -58,7 +58,17 @@
       .map((c) => ({ date: c[0], task: c[1] || '', who: c[2] || '', state: c[3] || '' }));
   }
 
-  const blank = (v) => !v || /^（.*）$/.test(v) || /YYYY/.test(v) || v.includes(' / ');
+  // 「## ログ」の記録（- YYYY-MM-DD 名前（…）: 内容）を読む。書いた順のまま返す
+  // who は（…）を除いた名前（例「テン（オウセン代筆・巡回）」→「テン」）
+  function logs(md) {
+    return section(md, 'ログ').map((l) => {
+      const m = l.match(/^(\d{4}-\d{2}-\d{2})\s+([^:：]+?)\s*[:：]\s*(.*)$/);
+      if (!m) return null;
+      return { date: m[1], who: m[2].replace(/[（(].*$/, '').trim(), text: m[3].trim() };
+    }).filter(Boolean);
+  }
+
+  const blank = (v) =>!v || /^（.*）$/.test(v) || /YYYY/.test(v) || v.includes(' / ');
   const base = (p) => p.split('/').pop();
 
   function projects(files) {
@@ -90,6 +100,7 @@
         next: f['次のアクション'] || '',
         questions: section(clean, 'オーナーへの確認事項'),
         schedule: sched,
+        log: logs(clean),
         tasks: { done, todo },
       });
     }
@@ -175,11 +186,45 @@
     return null;
   }
 
-  function team(list) {
+  // 担当欄（「キョウカイ・オウホン」など複数可）に入っているメンバー名の一覧
+  // 「モウテン」に「テン」が含まれるため、区切って1人ずつ判定する
+  function members(text) {
+    return String(text || '').split(/[・、,，/／&＆+＋\s]+/).map((s) => Sprites.who(s)).filter(Boolean);
+  }
+
+  const RECENT_DAYS = 3; // この日数以内にログがあれば「稼働中」とみなす
+
+  function team(list, now) {
     const active = list.filter((p) => !['納品済み', '中止'].includes(p.stage));
+    const today = new Date((now ? new Date(now) : new Date()).getTime() + 9 * 3600e3).toISOString().slice(0, 10);
+    const daysAgo = (d) => Math.round((Date.parse(today) - Date.parse(d)) / 86400000);
     return Object.entries(Sprites.TEAM).map(([id, t]) => {
       const mine = active.filter((p) => Sprites.who(p.owner) === id);
-      return { id, role: t.role, job: t.job, count: mine.length, projects: mine.map((p) => p.name) };
+      // いまの仕事：日程表で担当に名前があり、完了以外の行のうち予定日がいちばん早いもの
+      let task = null;
+      for (const p of active) {
+        for (const r of p.schedule || []) {
+          if (/^完了/.test(r.state) || !members(r.who).includes(id)) continue;
+          const date = r.date.slice(0, 10);
+          if (!task || date < task.date) task = { project: p.name, task: r.task, date, deadline: /社内締切/.test(r.date), state: r.state };
+        }
+      }
+      // 担当している案件の「次のアクション」（最初の1件）
+      const np = mine.find((p) => p.next);
+      const next = np ? { project: np.name, text: np.next } : null;
+      // ログで、その名前で始まる直近の記録（同じ日付なら後に書かれたもの）
+      let log = null;
+      for (const p of list) {
+        for (const l of p.log || []) {
+          if (l.who === id && (!log || l.date >= log.date)) log = { project: p.name, date: l.date, text: l.text };
+        }
+      }
+      const recent = !!log && daysAgo(log.date) <= RECENT_DAYS;
+      return {
+        id, role: t.role, job: t.job, count: mine.length, projects: mine.map((p) => p.name),
+        task, next, log,
+        busy: mine.length > 0 || !!task || recent, // 担当0件でも、日程やログで動いていれば稼働中
+      };
     });
   }
 
@@ -240,7 +285,7 @@
     const st = {
       company: companyName(files),
       projects: list,
-      team: team(list),
+      team: team(list, extra.now),
       ops: { heartbeat: hb, lastCommit: extra.lastCommit || null, nextRun: nextRun() },
       inbox: inbox(files),
       decisions: decisions(files),

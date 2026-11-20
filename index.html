@@ -133,6 +133,20 @@
   .member .st.busy { color: var(--gold); }
   .member .st.free { color: var(--faint); }
   .member.busy .avatar { animation: bob 1s steps(2) infinite; }
+  /* メンバーのいまの仕事（日程・次のアクション・直近のログ） */
+  .member { padding-bottom: 8px; border-bottom: 2px dashed #ffffff26; }
+  .member:last-child { padding-bottom: 0; border-bottom: 0; }
+  .work { grid-column: 2 / -1; list-style: none; margin: 4px 0 0; padding: 0; display: grid; gap: 2px; font-size: 12px; line-height: 1.5; min-width: 0; }
+  .work li { display: grid; grid-template-columns: 3.2em minmax(0, 1fr); gap: 0 4px; min-width: 0; }
+  .work .k { color: var(--sub); white-space: nowrap; }
+  .work .v { min-width: 0; overflow-wrap: anywhere; display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; line-clamp: 2; overflow: hidden; }
+  .work .v small { color: var(--faint); font-size: 11px; }
+  .work .w-task .v { color: var(--text); }
+  .work .w-task.doing .k { color: var(--gold); }
+  .work .w-task.late .v, .work .w-task.late .k { color: var(--low); }
+  .work .w-next .v { color: var(--text); }
+  .work .w-log .v { color: var(--sub); }
+  .work .idle { display: block; color: var(--faint); }
 
   /* 冒険の記録 */
   .rows { display: grid; gap: 6px; font-size: 14px; }
@@ -331,6 +345,29 @@ document.addEventListener('toggle', (ev) => {
   }
 }, true);
 
+// メンバーのいまの仕事（いま＝日程のいちばん近い作業 ／ 次＝担当案件の次のアクション ／ 記録＝直近のログ）
+const md = (d) => { const m = String(d || '').match(/\d{4}-(\d{2})-(\d{2})/); return m ? `${+m[1]}/${+m[2]}` : String(d || ''); };
+const cut = (t, n) => { t = String(t || '').trim(); return t.length > n ? t.slice(0, n) + '…' : t; };
+const shortName = (n) => String(n || '').replace(/\s*[（(].*[）)]\s*$/, ''); // 案件名の（…）を省く
+function workHtml(m) {
+  const items = [];
+  if (m.task) {
+    const t = m.task;
+    const d = daysLeft(t.date);
+    const late = d !== null && d < 0;
+    const doing = /進行|作業中|制作中/.test(t.state);
+    items.push(`<li class="w-task ${late ? 'late' : doing ? 'doing' : ''}"><span class="k">${doing ? '▶' : ''}いま</span>
+      <span class="v">${esc(md(t.date))}${late ? ' 遅れ' : ''}${t.deadline ? '（社内締切）' : ''} ${esc(cut(t.task, 40))} <small>${esc(shortName(t.project))}</small></span></li>`);
+  }
+  if (m.next) items.push(`<li class="w-next"><span class="k">次 ▷</span><span class="v">${esc(cut(m.next.text, 40))}</span></li>`);
+  if (m.log) {
+    const first = m.log.text.split('。')[0];
+    items.push(`<li class="w-log"><span class="k">記録</span><span class="v">${esc(md(m.log.date))} ${esc(m.id)}：${esc(cut(first, 48))}</span></li>`);
+  }
+  if (!m.task && !m.next && !m.log && !m.count) return '<div class="work"><span class="idle">待機中</span></div>';
+  return items.length ? `<ul class="work">${items.join('')}</ul>` : '';
+}
+
 const hpColor = (p) => (p >= 70 ? 'var(--hp)' : p >= 30 ? 'var(--mid)' : 'var(--low)');
 
 // ---- メッセージウィンドウ（文字送り） ----
@@ -415,12 +452,16 @@ function render(s) {
   if (finished) $('projects').innerHTML += `<div class="empty">完了・中止: ${finished}件</div>`;
 
   // パーティ
-  $('team').innerHTML = s.team.map((m) => `<div class="member ${m.count ? 'busy' : ''}">
+  $('team').innerHTML = s.team.map((m) => {
+    const busy = m.busy ?? m.count > 0; // 担当0件でも、日程やログで動いていれば稼働中
+    return `<div class="member ${busy ? 'busy' : ''}">
       <span class="avatar">${Sprites.svg(m.id, 40)}</span>
       <div style="min-width:0"><div class="n">${esc(m.id)}<span class="j">${esc(m.role)}</span></div>
-        <div class="r">${m.count ? esc(m.projects.join('、')) : '—'}</div></div>
-      <span class="st ${m.count ? 'busy' : 'free'}">${m.count ? `稼働中<br>${m.count}件` : '待機'}</span>
-    </div>`).join('');
+        ${m.count || !(m.task || m.next || m.log) ? `<div class="r">${m.count ? esc(m.projects.join('、')) : '—'}</div>` : ''}</div>
+      <span class="st ${busy ? 'busy' : 'free'}">${busy ? `稼働中${m.count ? `<br>${m.count}件` : ''}` : '待機'}</span>
+      ${workHtml(m)}
+    </div>`;
+  }).join('');
 
   // 冒険の記録（稼働状況）
   const hb = s.ops.heartbeat;
@@ -469,7 +510,7 @@ function render(s) {
   if (over.length) msgs.push(`オウセン「${over[0].name}の納期を過ぎています。\nすぐに対応します。」`);
   if (active.length) {
     msgs.push(`オウセン「いま${active.length}件の案件を進めています。\nいちばん急ぐのは ${active[0].name}です。」`);
-    const busy = s.team.filter((m) => m.count && m.id !== 'オーナー');
+    const busy = s.team.filter((m) => (m.busy ?? m.count) && m.id !== 'オーナー');
     if (busy.length) msgs.push(`${busy.map((m) => m.id).join('、')}が作業中です。`);
   } else {
     msgs.push('オウセン「いまは進行中の案件がありません。\n次の案件を待っています。」');
