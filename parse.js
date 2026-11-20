@@ -160,8 +160,8 @@
     return null;
   }
 
-  // クラウドのオウセンは24時間、2時間おき（日本時間の奇数時の20分：1:20・3:20…23:20）に巡回する
-  const RUN_HOURS_JST = [1, 3, 5, 7, 9, 11, 13, 15, 17, 19, 21, 23];
+  // クラウドのオウセンは24時間、1時間おき（毎時20分）に巡回する
+  const RUN_HOURS_JST = Array.from({ length: 24 }, (_, h) => h);
   const RUN_MINUTE = 20;
   function nextRun(now) {
     now = now || new Date();
