@@ -128,7 +128,8 @@
     if (!names.length) return null;
     const p = names[names.length - 1];
     const md = files[p];
-    const none = (s) => !/^(なし|特になし)$/.test(s);
+    // 「なし」や「参考：…」（答えなくてよい補足）は確認事項にしない
+    const none = (s) => !/^(なし|特になし)$/.test(s) && !/^参考\s*[:：]/.test(s);
     return {
       path: p,
       date: base(p).slice(0, 10),
