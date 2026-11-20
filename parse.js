@@ -9,7 +9,7 @@
     return /^05_projects\/[^_/][^/]*\/README\.md$/.test(p)
       || /^05_projects\/_inbox\/[^_/][^/]*\.md$/.test(p)
       || /^00_board\/decisions\/[^_/][^/]*\.md$/.test(p)
-      || /^03_reports\/(daily|weekly|monthly)\/\d{4}-\d{2}-\d{2}[^/]*\.md$/.test(p)
+      || /^03_reports\/(daily|weekly|monthly|morning)\/\d{4}-\d{2}-\d{2}[^/]*\.md$/.test(p)
       || /^00_board\/answers\/(done\/)?[^_/][^/]*\.md$/.test(p)
       || p === '03_reports/heartbeat.json'
       || p === '01_company/profile.md';
@@ -122,6 +122,25 @@
       .filter((d) => d.status === '起案中');
   }
 
+  // 毎朝10時のオーナー向け進捗報告（03_reports/morning/ の最新）
+  function morningReport(files) {
+    const names = Object.keys(files).filter((p) => p.startsWith('03_reports/morning/') && p.endsWith('.md')).sort();
+    if (!names.length) return null;
+    const p = names[names.length - 1];
+    const md = files[p];
+    const none = (s) => !/^(なし|特になし)$/.test(s);
+    return {
+      path: p,
+      date: base(p).slice(0, 10),
+      summary: section(md, 'ひとことで'),
+      progress: section(md, '昨日からの進み具合'),
+      today: section(md, '今日の予定'),
+      risks: section(md, '遅れ・リスク').filter(none),
+      asks: section(md, 'オーナーに判断してほしいこと').filter(none),
+      numbers: section(md, '数字'),
+    };
+  }
+
   function latestReport(files) {
     for (const kind of ['daily', 'weekly', 'monthly']) {
       const names = Object.keys(files).filter((p) => p.startsWith(`03_reports/${kind}/`) && p.endsWith('.md')).sort();
@@ -200,6 +219,8 @@
       if (a && a.done) return;
       list.push({ id, kind, target, from, text, answered: a ? a.answer : null });
     };
+    const mr = st.morning;
+    if (mr) mr.asks.forEach((t) => add('報告', mr.path, `朝の報告（${mr.date}）`, t));
     const r = st.report;
     if (r) r.asks.forEach((t) => add('報告', r.path, `オウセンの報告（${r.date}）`, t));
     st.projects.forEach((p) => p.questions.forEach((q) => add('確認事項', `05_projects/${p.folder}/README.md`, p.name, q)));
@@ -223,6 +244,7 @@
       inbox: inbox(files),
       decisions: decisions(files),
       report: latestReport(files),
+      morning: morningReport(files),
       sync: extra.sync || { at: null, ok: null, message: '' },
       now: new Date().toISOString(),
     };

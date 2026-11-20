@@ -81,6 +81,17 @@
   .q-meta .reward { color: var(--gold); }
   .risk { color: var(--low); border: 2px solid var(--low); border-radius: 4px; padding: 0 6px; font-size: 12px; }
   .q-risk { grid-column: 2 / -1; font-size: 13px; color: var(--low); }
+  /* 朝の報告 */
+  .morning { margin-bottom: 26px; }
+  .morning .lead { font-size: 17px; margin: 0 0 10px; }
+  .morning .cols { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 6px 22px; }
+  .morning h3 { font-size: 13px; font-weight: 400; color: var(--sub); margin: 6px 0 4px; }
+  .morning ul { list-style: none; margin: 0; padding: 0; display: grid; gap: 4px; font-size: 14px; }
+  .morning li { padding-left: 16px; position: relative; overflow-wrap: anywhere; }
+  .morning li::before { content: "・"; position: absolute; left: 0; color: var(--sub); }
+  .morning .risk-list li { color: var(--low); }
+  .morning .stale { color: var(--faint); font-size: 12px; }
+
   /* 日程 */
   .sched { grid-column: 2 / -1; font-size: 13px; margin-top: 2px; }
   .sched summary { cursor: pointer; color: var(--sub); list-style: none; }
@@ -191,6 +202,11 @@
     <button id="settings" title="スマホ版の設定">⚙</button>
     <button id="refresh" title="GitHub から最新を取得">▶ 最新を取得</button>
   </header>
+
+  <section class="win morning" id="morning" hidden>
+    <span class="tab" id="morning-tab">朝の報告</span>
+    <div id="morning-body"></div>
+  </section>
 
   <div class="grid">
     <div class="col">
@@ -344,6 +360,24 @@ function render(s) {
     .sort((a, b) => (daysLeft(a.internalDue || a.due) ?? 9999) - (daysLeft(b.internalDue || b.due) ?? 9999));
   const finished = s.projects.length - active.length;
   const dueSoon = active.filter((p) => { const d = daysLeft(p.due); return d !== null && d <= 7; });
+
+  // 朝の報告（毎朝10時）
+  const mr = s.morning;
+  $('morning').hidden = !mr;
+  if (mr) {
+    const list = (items, cls = '') => items.length ? `<ul class="${cls}">${items.map((t) => `<li>${esc(t)}</li>`).join('')}</ul>` : '<ul><li>なし</li></ul>';
+    const m = mr.date.match(/\d{4}-(\d{2})-(\d{2})/);
+    const old = daysLeft(mr.date);
+    $('morning-tab').textContent = `朝の報告 ${m ? `${+m[1]}/${+m[2]}` : mr.date} 10:00`;
+    $('morning-body').innerHTML = `
+      <p class="lead">${esc(mr.summary.join(' '))}</p>
+      ${old !== null && old < 0 ? `<p class="stale">（${-old}日前の報告です）</p>` : ''}
+      <div class="cols">
+        <div><h3>昨日からの進み具合</h3>${list(mr.progress)}</div>
+        <div><h3>今日の予定</h3>${list(mr.today)}</div>
+        <div><h3>遅れ・リスク</h3>${list(mr.risks, 'risk-list')}${mr.numbers.length ? `<h3>数字</h3>${list(mr.numbers)}` : ''}</div>
+      </div>`;
+  }
 
   // オーナー確認事項（parse.js が作る。回答済み・反映待ちのものは answered に回答が入る）
   const allAsks = s.asks || [];
