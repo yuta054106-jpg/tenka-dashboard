@@ -8,6 +8,7 @@
   function wanted(p) {
     return /^05_projects\/[^_/][^/]*\/README\.md$/.test(p)
       || /^05_projects\/_inbox\/[^_/][^/]*\.md$/.test(p)
+      || /^05_projects\/_応募候補\/(done\/)?\d{4}-\d{2}-\d{2}[^/]*\.md$/.test(p)
       || /^00_board\/decisions\/[^_/][^/]*\.md$/.test(p)
       || /^03_reports\/(daily|weekly|monthly|morning)\/\d{4}-\d{2}-\d{2}[^/]*\.md$/.test(p)
       || /^00_board\/answers\/(done\/)?[^_/][^/]*\.md$/.test(p)
@@ -121,6 +122,28 @@
           source: blank(f['掲載元']) ? '' : f['掲載元'],
         };
       });
+  }
+
+  // 応募一覧（05_projects/_応募候補/ と done/）。状態の最初の語で分ける
+  function applications(files) {
+    return Object.entries(files)
+      .filter(([p]) => /^05_projects\/_応募候補\/(done\/)?\d{4}-\d{2}-\d{2}[^/]*\.md$/.test(p))
+      .map(([p, md]) => {
+        const { out: f } = fields(md);
+        const raw = (f['状態'] || '').replace(/[（(].*$/, '').trim();
+        const status = /受注/.test(raw) ? '受注' : /応募済み/.test(raw) ? '返事待ち'
+          : (/見送り|落選|不採用|終了|辞退/.test(raw) || /\/done\//.test(p)) ? '終了' : '送信待ち';
+        const am = (f['提案する金額'] || '').match(/[\d,]+円/);
+        return {
+          file: base(p), date: base(p).slice(0, 10),
+          name: title(md) || base(p).replace(/\.md$/, ''),
+          site: blank(f['サイト']) ? '' : f['サイト'].replace(/[（(].*$/, '').trim(),
+          url: /^https?:\/\//.test(f['案件URL'] || '') ? f['案件URL'] : '',
+          amount: am ? am[0] : '',
+          status,
+        };
+      })
+      .sort((a, b) => b.date.localeCompare(a.date));
   }
 
   function decisions(files) {
@@ -288,6 +311,7 @@
       team: team(list, extra.now),
       ops: { heartbeat: hb, lastCommit: extra.lastCommit || null, nextRun: nextRun() },
       inbox: inbox(files),
+      applications: applications(files),
       decisions: decisions(files),
       report: latestReport(files),
       morning: morningReport(files),

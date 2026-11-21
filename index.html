@@ -61,7 +61,7 @@
   .col { display: flex; flex-direction: column; gap: 26px; min-width: 0; }
 
   /* ステータス（KPI） */
-  .stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 4px 18px; }
+  .stats { display: grid; grid-template-columns: repeat(5, 1fr); gap: 4px 18px; }
   @media (max-width: 640px) { .stats { grid-template-columns: repeat(2, 1fr); } }
   .stat .label { color: var(--sub); font-size: 13px; }
   .stat .value { font-size: 30px; color: var(--gold); line-height: 1.2; }
@@ -169,6 +169,9 @@
   .ans button { padding: 4px 18px; }
   ul.list li { min-width: 0; }
   .answered { color: var(--hp); font-size: 12px; margin-top: 4px; }
+  .apps li .st { display: inline-block; font-size: 12px; padding: 0 6px; margin-right: 6px; border: 1px solid currentColor; border-radius: 4px; }
+  .apps li .st.wait { color: var(--gold); } .apps li .st.todo { color: var(--sub); } .apps li .st.won { color: #6fdc8c; }
+  .apps li a { color: inherit; }
   .empty { color: var(--faint); font-size: 14px; padding: 10px 2px; }
 
   /* メッセージウィンドウ */
@@ -230,8 +233,14 @@
           <div class="stat"><div class="label">進行中の案件</div><div class="value" id="k-active">–</div></div>
           <div class="stat"><div class="label">未着手の案件</div><div class="value" id="k-inbox">–</div></div>
           <div class="stat" id="kpi-due"><div class="label">7日以内の納期</div><div class="value" id="k-due">–</div></div>
+          <div class="stat"><div class="label">応募の返事待ち</div><div class="value" id="k-apps">–</div></div>
           <div class="stat" id="kpi-ask"><div class="label">オーナー確認待ち</div><div class="value" id="k-ask">–</div></div>
         </div>
+      </section>
+
+<section class="win">
+        <span class="tab">応募一覧</span>
+        <div id="apps"></div>
       </section>
 
       <section class="win">
@@ -495,6 +504,25 @@ function render(s) {
       </li>`).join('')}</ul>`
     : `<div class="empty">ありません</div>`;
 
+  // 応募一覧（受注・送信待ち・返事待ちを上に。終了は件数だけ）
+  const apps = s.applications || [];
+  const openApps = apps.filter((a) => a.status !== '終了');
+  const order = { '受注': 0, '送信待ち': 1, '返事待ち': 2 };
+  openApps.sort((a, b) => order[a.status] - order[b.status] || b.date.localeCompare(a.date));
+  const waitN = apps.filter((a) => a.status === '返事待ち').length;
+  $('k-apps').innerHTML = waitN + '<small>件</small>';
+  const cls = { '返事待ち': 'wait', '送信待ち': 'todo', '受注': 'won' };
+  const ended = apps.length - openApps.length;
+  const sent = apps.filter((a) => a.status !== '送信待ち').length;
+  $('apps').innerHTML = (openApps.length
+    ? '<ul class="list apps">' + openApps.map((a) => '<li><span class="from">'
+        + esc([a.date.slice(5).replace('-', '/'), a.site, a.amount].filter(Boolean).join(' ・ '))
+        + '</span><span class="st ' + cls[a.status] + '">' + a.status + '</span>'
+        + (a.url ? '<a href="' + esc(a.url) + '" target="_blank" rel="noopener">' + esc(a.name) + '</a>' : esc(a.name))
+        + '</li>').join('') + '</ul>'
+    : '<div class="empty">応募中の案件はありません</div>')
+    + '<div class="empty">これまでに送った応募 ' + sent + '件' + (ended ? '（終了 ' + ended + '件）' : '') + '</div>';
+
   // 依頼
   $('inbox').innerHTML = s.inbox.length
     ? `<ul class="list">${s.inbox.map((i) => `<li><span class="from">${esc([i.source, i.kind, i.amount].filter(Boolean).join(' ・ ') || '着手待ち')}</span>${esc(i.name)}</li>`).join('')}</ul>`
@@ -515,6 +543,7 @@ function render(s) {
   } else {
     msgs.push('オウセン「いまは進行中の案件がありません。\n次の案件を待っています。」');
   }
+  if (waitN) msgs.push('オウセン「いま' + waitN + '件の応募の返事を待っています。」');
   if (s.inbox.length) msgs.push(`未着手の案件が${s.inbox.length}件あります。\n次の巡回で着手します。`);
   if (s.ops.nextRun) msgs.push(`次の巡回は${fmtTime(s.ops.nextRun)}です。（${until(s.ops.nextRun)}）`);
   msgs.push('オウセン「勝てる戦しかしない。」');
