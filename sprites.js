@@ -44,6 +44,11 @@
       colors: { h: '#4a3b52', c: '#5a4fa8', a: '#cfd3e6' },
       rows: { 5: '..hhhhhhhhhhhh..', 11: '..hssssssssssh..' },
     },
+    'トウ': {
+      role: 'バックエンド', kanji: '騰', job: 'れんけい',
+      colors: { h: '#2b2b33', c: '#2e7d6b', a: '#d9d2c5', p: '#2b2b33' },
+      rows: { 0: '.....pppppp.....', 8: '..hsseesseessh..', 10: '..hsssmmmmsssh..' },
+    },
     'テン': {
       role: 'CMO', kanji: '河了貂', job: 'ぐんし',
       colors: { h: '#3b3546', c: '#ff8c42', a: '#ffe08a', p: '#ffffff' },
