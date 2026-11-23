@@ -134,7 +134,12 @@
         const status = /受注/.test(raw) ? '受注' : /応募済み/.test(raw) ? '返事待ち'
           : (/見送り|落選|不採用|終了|辞退/.test(raw) || /\/done\//.test(p)) ? '終了' : '送信待ち';
         const am = (f['提案する金額'] || '').match(/[\d,]+円/);
+        // 応募文（「## 応募文」の直後のコードブロック）と納期。スマホからコピーして送るため（2026-11-23）
+        const sec = md.split(/\n## 応募文/)[1] || '';
+        const cb = sec.match(/```[^\n]*\n([\s\S]*?)\n```/);
+        const dm = (f['提案する納期'] || '').match(/\d{4}-\d{2}-\d{2}/);
         return {
+          path: p, text: cb ? cb[1] : '', due: dm ? dm[0] : '',
           file: base(p), date: base(p).slice(0, 10),
           name: title(md) || base(p).replace(/\.md$/, ''),
           site: blank(f['サイト']) ? '' : f['サイト'].replace(/[（(].*$/, '').trim(),

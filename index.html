@@ -175,6 +175,9 @@
   .apps li .st { display: inline-block; font-size: 12px; padding: 0 6px; margin-right: 6px; border: 1px solid currentColor; border-radius: 4px; }
   .apps li .st.wait { color: var(--gold); } .apps li .st.todo { color: var(--sub); } .apps li .st.won { color: #6fdc8c; }
   .apps li a { color: inherit; }
+  .apps .send { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 6px; }
+  .apps .send button, .apps .send a.btn { font: inherit; font-size: 12px; padding: 4px 10px; border-radius: 4px; border: 1px solid var(--gold); background: none; color: var(--gold); cursor: pointer; text-decoration: none; }
+  .apps .send .hint { width: 100%; font-size: 12px; color: var(--sub); }
   .empty { color: var(--faint); font-size: 14px; padding: 10px 2px; }
 
   /* メッセージウィンドウ */
@@ -536,9 +539,16 @@ function render(s) {
         + esc([a.date.slice(5).replace('-', '/'), a.site, a.amount].filter(Boolean).join(' ・ '))
         + '</span><span class="st ' + cls[a.status] + '">' + a.status + '</span>'
         + (a.url ? '<a href="' + esc(a.url) + '" target="_blank" rel="noopener">' + esc(a.name) + '</a>' : esc(a.name))
+        + (a.status === '送信待ち' && a.text ? '<div class="send">'
+          + '<button data-copy="' + esc(a.file) + '">応募文をコピー</button>'
+          + (a.url ? '<a class="btn" href="' + esc(a.url) + '" target="_blank" rel="noopener">案件ページを開く</a>' : '')
+          + '<button data-sent="' + esc(a.file) + '">送った</button>'
+          + '<span class="hint">金額 ' + esc(a.amount || '—') + '／納品予定日 ' + esc(a.due || '—') + ' を入れて送ってください</span></div>' : '')
         + '</li>').join('') + '</ul>'
     : '<div class="empty">応募中の案件はありません</div>')
     + '<div class="empty">これまでに送った応募 ' + sent + '件' + (ended ? '（終了 ' + ended + '件）' : '') + '</div>';
+
+  window.__apps = Object.fromEntries(apps.map((a) => [a.file, a]));
 
   // 依頼
   $('inbox').innerHTML = s.inbox.length
@@ -683,6 +693,23 @@ async function saveAnswer(ask, answer, comment) {
   }
   if (!r.ok) throw new Error('GitHub に保存できませんでした（' + r.status + '）');
 }
+
+// 応募一覧：スマホから「応募文をコピー」「送った」（2026-11-23 オーナー「両方やろう」）
+$('apps').addEventListener('click', async (ev) => {
+  const c = ev.target.closest('button[data-copy]');
+  const s = ev.target.closest('button[data-sent]');
+  const a = (window.__apps || {})[(c || s || {}).dataset?.copy || (c || s || {}).dataset?.sent];
+  if (!a) return;
+  if (c) {
+    try { await navigator.clipboard.writeText(a.text); say('応募文をコピーしました。\n案件ページの応募欄に貼ってください。'); }
+    catch (e) { window.prompt('コピーしてください', a.text); }
+    return;
+  }
+  if (!confirm('「' + a.name + '」の応募を送りましたか？')) return;
+  const ask = { id: 'app-' + a.file.replace(/\.md$/, ''), kind: '応募', target: a.path, from: '応募一覧', text: 'この応募をオーナーが送った' };
+  try { await saveAnswer(ask, 'OK', 'オーナーがスマホから送信'); say('記録しました。オウセンが「応募済み」にします。'); s.disabled = true; s.textContent = '記録済み'; }
+  catch (e) { say(e.message); }
+});
 
 $('asks').addEventListener('input', (ev) => {
   if (ev.target.classList.contains('ans-c')) drafts[ev.target.dataset.id] = ev.target.value;
