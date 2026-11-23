@@ -69,6 +69,11 @@
       colors: { h: '#3b2a20', c: '#1f3b73', a: '#f2c94c', p: '#f2c94c' },
       rows: { 0: '.......pp.......', 1: '....hhhpphhh....', 7: '..hssssssssssh..', 8: '..hsskksskkssh..' },
     },
+    'リシ': {
+      role: '顧問', kanji: '李斯', job: 'こもん（GPT）',
+      colors: { h: '#2a2a2a', c: '#4b5d73', a: '#e8e1cf', p: '#111111' },
+      rows: { 0: '....pppppppp....', 1: '...pppppppppp...', 7: '..hssssssssssh..', 8: '..hsskksskkssh..', 10: '..hsssmmmmsssh..' },
+    },
     'オーナー': {
       role: 'OWNER', kanji: '', job: 'おうさま',
       colors: { h: '#7a4b2a', c: '#2f5fd0', a: '#f2c94c', p: '#f2c94c' },
