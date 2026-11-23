@@ -111,6 +111,9 @@
   .sched li.late, .sched li.late .dt { color: var(--low); }
   .q-next { grid-column: 2 / -1; font-size: 13px; color: var(--text); }
   .q-next::before { content: "次 ▷ "; color: var(--sub); }
+  .quest .clamp { display: -webkit-box; -webkit-line-clamp: 1; -webkit-box-orient: vertical; overflow: hidden; }
+  .q-more { grid-column: 2 / -1; justify-self: start; background: none; border: 1px solid var(--sub); color: var(--sub); font: inherit; font-size: 12px; padding: 2px 10px; border-radius: 4px; cursor: pointer; }
+  .q-more:hover { color: var(--text); border-color: var(--text); }
   .due.soon { color: var(--mid); }
   .due.over { color: var(--low); animation: blink 1s steps(2) infinite; }
   .stage { font-size: 13px; }
@@ -395,7 +398,20 @@ function nextMessage() {
 $('message').onclick = nextMessage;
 setInterval(nextMessage, 7000);
 
+// 案件一覧：最初は詳細を閉じる（オーナー 2026-11-23「長くて見づらい。全文表示で開けるように」）
+const openQuests = new Set((() => { try { return JSON.parse(localStorage.getItem('openQuests') || '[]'); } catch (e) { return []; } })());
+let lastState = null;
+document.addEventListener('click', (ev) => {
+  const b = ev.target.closest && ev.target.closest('.q-more');
+  if (!b) return;
+  const k = b.dataset.key;
+  if (openQuests.has(k)) openQuests.delete(k); else openQuests.add(k);
+  try { localStorage.setItem('openQuests', JSON.stringify([...openQuests])); } catch (e) {}
+  if (lastState) render(lastState);
+});
+
 function render(s) {
+  lastState = s;
   const name = s.company || '社名未定';
   $('company').textContent = name;
   document.title = 'TENKA LAB';
@@ -451,9 +467,10 @@ function render(s) {
         <div class="bar"><i style="width:${p.progress}%;background:${hpColor(p.progress)}"></i></div>
       </div>
       <div class="who"><span class="avatar">${face(p.owner)}</span>${esc(p.owner)}</div>
-      ${p.risk ? `<div class="q-risk">遅れの理由 ▷ ${esc(p.risk)}</div>` : ''}
-      ${p.next ? `<div class="q-next">${esc(p.next)}</div>` : ''}
-      ${scheduleHtml(p.schedule)}
+      ${p.risk ? `<div class="q-risk ${openQuests.has(p.name) ? '' : 'clamp'}">遅れの理由 ▷ ${esc(p.risk)}</div>` : ''}
+      ${p.next ? `<div class="q-next ${openQuests.has(p.name) ? '' : 'clamp'}">${esc(p.next)}</div>` : ''}
+      ${openQuests.has(p.name) ? scheduleHtml(p.schedule) : ''}
+      ${(p.next || p.risk || (p.schedule && p.schedule.length)) ? `<button class="q-more" data-key="${esc(p.name)}">${openQuests.has(p.name) ? '閉じる' : '全文表示'}</button>` : ''}
     </div>`;
   };
   $('projects').innerHTML = active.length ? active.map(quest).join('')
