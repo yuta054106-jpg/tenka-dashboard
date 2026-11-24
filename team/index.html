@@ -1,0 +1,322 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>TENKA チームボード</title>
+<meta name="robots" content="noindex">
+<meta name="theme-color" content="#07071c">
+<link rel="icon" href="../icon-192.png">
+<link rel="apple-touch-icon" href="../icon-180.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DotGothic16&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --page: #07071c; --win: #000; --line: #fff; --text: #fff; --sub: #a9a9c8; --faint: #6d6d8f;
+    --gold: #ffd23f; --hp: #4ade80; --low: #ff5a5a; --mp: #5aa9ff;
+    --s-req: #b28cff; --s-make: #5aa9ff; --s-test: #3fe0d0; --s-wait: #ffa63f; --s-done: #4ade80; --s-stop: #8f8fa8;
+  }
+  * { box-sizing: border-box; }
+  html, body { background: var(--page); }
+  body {
+    margin: 0; color: var(--text);
+    background-image: radial-gradient(#ffffff14 1px, transparent 1px); background-size: 22px 22px;
+    font-family: "DotGothic16", "MS Gothic", monospace; font-size: 15px; line-height: 1.6; letter-spacing: .04em;
+  }
+  .wrap { max-width: 1280px; margin: 0 auto; padding: 18px 20px 60px; }
+  @media (max-width: 640px) { .wrap { padding: 12px 16px 60px; } }
+  .win { background: var(--win); border: 3px solid var(--line); border-radius: 8px; box-shadow: 0 0 0 3px var(--win), 0 6px 0 3px #0008; padding: 14px 16px 16px; position: relative; }
+  .win > .tab { position: absolute; top: -13px; left: 14px; background: var(--win); padding: 0 8px; font-size: 13px; letter-spacing: .1em; }
+  header.win { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; margin-bottom: 26px; }
+  header h1 { font-size: 20px; margin: 0; font-weight: 400; letter-spacing: .12em; }
+  header .sub { color: var(--sub); font-size: 12px; }
+  header .spacer { flex: 1; }
+  button { font: inherit; color: var(--text); background: var(--win); border: 2px solid var(--line); border-radius: 6px; padding: 5px 12px; cursor: pointer; letter-spacing: .06em; }
+  button:hover, button:focus-visible { background: #fff; color: #000; outline: none; }
+  button[aria-pressed="true"] { background: var(--gold); color: #000; border-color: var(--gold); }
+  .filters { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 22px; align-items: center; }
+  .filters .gap { flex: 1; }
+  .kpis { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; margin-bottom: 30px; }
+  @media (max-width: 640px) { .kpis { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+  .kpis .win { padding: 10px 12px; text-align: center; }
+  .kpis b { display: block; font-size: 28px; font-weight: 400; line-height: 1.2; }
+  .kpis span { font-size: 12px; color: var(--sub); }
+  .kpis .bad b { color: var(--low); }
+  .kpis .soon b { color: var(--gold); }
+  .cols { display: grid; grid-template-columns: repeat(auto-fit, minmax(340px, 1fr)); gap: 30px 22px; align-items: start; }
+  @media (max-width: 400px) { .cols { grid-template-columns: 1fr; } }
+  .col > .tab { font-size: 15px; }
+  .col .meta { color: var(--sub); font-size: 12px; margin: 0 0 10px; }
+  .card { border: 2px solid #ffffff55; border-radius: 6px; padding: 10px 12px; margin-top: 12px; }
+  .card.risk { border-color: var(--low); }
+  .card h3 { margin: 0 0 2px; font-size: 15px; font-weight: 400; overflow-wrap: anywhere; }
+  .card .client { color: var(--sub); font-size: 12px; }
+  .row { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; margin-top: 6px; font-size: 13px; }
+  .badge { font-size: 12px; padding: 0 6px; border-radius: 4px; color: #000; }
+  .due { color: var(--sub); }
+  .due.late { color: var(--low); } .due.soon { color: var(--gold); }
+  .bar { height: 10px; border: 2px solid var(--line); border-radius: 3px; margin-top: 8px; position: relative; }
+  .bar i { position: absolute; inset: 0 auto 0 0; background: var(--hp); }
+  .pct { font-size: 12px; color: var(--sub); }
+  .next { font-size: 13px; margin-top: 6px; overflow-wrap: anywhere; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; cursor: pointer; }
+  .next.open { -webkit-line-clamp: unset; display: block; }
+  .next::before { content: "▶ "; color: var(--gold); }
+  .riskline { color: var(--low); font-size: 13px; margin-top: 4px; }
+  details { margin-top: 6px; font-size: 12px; color: var(--sub); }
+  details summary { cursor: pointer; }
+  details ul { margin: 4px 0 0; padding-left: 16px; }
+  .empty { color: var(--faint); font-size: 13px; margin-top: 10px; }
+  .status { color: var(--sub); font-size: 12px; margin-top: 26px; text-align: center; }
+  .setup { position: fixed; inset: 0; background: #07071ce8; z-index: 10; display: none; place-items: center; padding: 16px; }
+  .setup.show { display: grid; }
+  .setup .win { width: min(520px, 100%); }
+  .setup h2 { font-size: 18px; font-weight: 400; margin: 6px 0 10px; }
+  .setup p { font-size: 13px; color: var(--sub); margin: 0 0 12px; }
+  .setup label { display: block; font-size: 13px; margin: 12px 0 4px; }
+  .setup input { width: 100%; font: inherit; font-size: 16px; color: var(--text); background: #111; border: 2px solid var(--line); border-radius: 6px; padding: 8px 10px; }
+  .setup .err { color: var(--low); min-height: 1.6em; margin-top: 10px; font-size: 13px; }
+  .setup .actions { display: flex; justify-content: flex-end; gap: 10px; margin-top: 6px; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="win">
+    <span class="tab">TEAM</span>
+    <div>
+      <h1>チームの案件ボード</h1>
+      <div class="sub" id="sub">読み込み中…</div>
+    </div>
+    <div class="spacer"></div>
+    <button id="refresh" type="button">↻ 更新</button>
+    <button id="settings" type="button">設定</button>
+  </header>
+
+  <div class="filters" id="filters"></div>
+  <div class="kpis" id="kpis"></div>
+  <div class="cols" id="cols"></div>
+  <div class="status" id="status"></div>
+</div>
+
+<div class="setup" id="setup">
+  <form class="win" id="setup-form" autocomplete="off">
+    <span class="tab">はじめの設定</span>
+    <h2>チームの案件を見る</h2>
+    <p>案件カードは非公開の GitHub リポジトリから直接読み込みます。入力した内容は、このブラウザの中にだけ保存されます。</p>
+    <label for="f-repo">リポジトリ（ユーザー名/リポジトリ名）</label>
+    <input id="f-repo" value="yuta054106-jpg/tenka-team" autocapitalize="off" spellcheck="false">
+    <label for="f-token">GitHub トークン</label>
+    <input id="f-token" type="password" placeholder="ghp_... または github_pat_..." autocapitalize="off" spellcheck="false">
+    <div class="err" id="f-err"></div>
+    <div class="actions">
+      <button type="button" id="f-forget">設定を消す</button>
+      <button type="submit">▶ はじめる</button>
+    </div>
+  </form>
+</div>
+
+<script>
+const $ = (id) => document.getElementById(id);
+const LOCAL = ['localhost', '127.0.0.1'].includes(location.hostname);
+const store = {
+  get: (k) => { try { return localStorage.getItem(k); } catch { return null; } },
+  set: (k, v) => { try { localStorage.setItem(k, v); } catch {} },
+  del: (k) => { try { localStorage.removeItem(k); } catch {} },
+};
+const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+const STAGES = { '要件定義': '--s-req', '制作中': '--s-make', 'テスト': '--s-test', '納品待ち': '--s-wait', '納品済み': '--s-done', '中止': '--s-stop' };
+const CLOSED = /納品済み|中止/;
+
+// ---- カードを読む ----
+function fields(md) {
+  const out = {};
+  const clean = md.replace(/<!--[\s\S]*?-->/g, '');
+  for (const line of clean.split(/\r?\n/)) {
+    const m = line.match(/^\s*-\s*([^:：\[\]]+?)\s*[:：]\s*(.*)$/);
+    if (m && !(m[1] in out)) out[m[1].trim()] = m[2].trim();
+  }
+  return { f: out, clean };
+}
+function section(md, name) {
+  const m = md.match(new RegExp('^##\\s+' + name + '\\s*$([\\s\\S]*?)(?=^##\\s|(?![\\s\\S]))', 'm'));
+  return m ? m[1].split(/\r?\n/).map((l) => l.replace(/^\s*[-*]\s*(\[.\]\s*)?/, '').trim()).filter(Boolean) : [];
+}
+function schedule(md) {
+  const m = md.match(/^##\s+日程\s*$([\s\S]*?)(?=^##\s|(?![\s\S]))/m);
+  if (!m) return [];
+  return m[1].split(/\r?\n/).filter((l) => /^\s*\|/.test(l))
+    .map((l) => l.trim().replace(/^\||\|$/g, '').split('|').map((c) => c.trim()))
+    .filter((c) => /^\d{4}-\d{2}-\d{2}/.test(c[0]))
+    .map((c) => ({ date: c[0].slice(0, 10), task: c[1] || '', who: c[2] || '', state: c[3] || '' }));
+}
+const blank = (v) => !v || /^（.*）$/.test(v) || /YYYY/.test(v) || v.includes(' / ');
+const dateOf = (v) => (String(v || '').match(/\d{4}-\d{2}-\d{2}/) || [''])[0];
+
+function parseCard(path, md) {
+  const [, who, folder] = path.match(/^projects\/([^/]+)\/([^/]+)\/README\.md$/);
+  const { f, clean } = fields(md);
+  const sched = schedule(clean);
+  let progress = parseInt(f['進捗'], 10);
+  if (Number.isNaN(progress) && sched.length) progress = Math.round(sched.filter((r) => /完了/.test(r.state)).length / sched.length * 100);
+  if (Number.isNaN(progress)) {
+    const d = (clean.match(/^\s*-\s*\[x\]/gim) || []).length, t = (clean.match(/^\s*-\s*\[ \]\s*\S/gm) || []).length;
+    progress = d + t ? Math.round(d / (d + t) * 100) : 0;
+  }
+  const logs = section(clean, 'ログ').map((l) => l.match(/^(\d{4}-\d{2}-\d{2})\s+([^:：]+?)\s*[:：]\s*(.*)$/)).filter(Boolean)
+    .map((m) => ({ date: m[1], who: m[2].replace(/[（(].*$/, '').trim(), text: m[3] }));
+  const title = (md.match(/^#\s+(.+)$/m) || [, folder])[1].replace(/^(案件|案件カード)\s*[:：]\s*/, '').trim();
+  const updated = [dateOf(f['最終更新']), ...logs.map((l) => l.date)].filter(Boolean).sort().pop() || folder.slice(0, 10);
+  const stage = blank(f['ステージ']) ? '要件定義' : f['ステージ'].split(/[\s（(]/)[0];
+  return {
+    who, folder, title, stage,
+    client: blank(f['クライアント']) ? '' : f['クライアント'],
+    due: blank(f['納期']) ? '' : dateOf(f['納期']) || f['納期'],
+    progress: Math.max(0, Math.min(100, progress)),
+    risk: /^あり/.test(f['遅れリスク'] || '') ? (f['遅れリスク'].replace(/^あり\s*[:：]?\s*/, '') || '理由未記入') : '',
+    owner: blank(f['担当']) ? '' : f['担当'],
+    next: f['次のアクション'] || '',
+    updated,
+    logs: logs.slice(-3).reverse(),
+  };
+}
+
+// ---- 取得 ----
+const blobCache = new Map();
+async function gh(path, raw) {
+  const r = await fetch('https://api.github.com' + path, {
+    headers: { Authorization: 'Bearer ' + store.get('team_token'), Accept: raw ? 'application/vnd.github.raw+json' : 'application/vnd.github+json', 'X-GitHub-Api-Version': '2022-11-28' },
+    cache: 'no-store',
+  });
+  if (!r.ok) { const e = new Error('HTTP ' + r.status); e.status = r.status; throw e; }
+  return raw ? r.text() : r.json();
+}
+const wanted = (p) => p === 'team.json' || /^projects\/[^/]+\/[^_./][^/]*\/README\.md$/.test(p);
+async function filesFromGitHub() {
+  const repo = store.get('team_repo');
+  const [commit] = await gh(`/repos/${repo}/commits?per_page=1`);
+  const tree = await gh(`/repos/${repo}/git/trees/${commit.sha}?recursive=1`);
+  const files = {};
+  await Promise.all(tree.tree.filter((t) => t.type === 'blob' && wanted(t.path)).map(async (b) => {
+    if (!blobCache.has(b.sha)) blobCache.set(b.sha, await gh(`/repos/${repo}/git/blobs/${b.sha}`, true));
+    files[b.path] = blobCache.get(b.sha);
+  }));
+  return { files, at: commit.commit.committer.date };
+}
+async function filesFromLocal() {
+  const r = await fetch('/api/files', { cache: 'no-store' });
+  return r.json();
+}
+
+// ---- 表示 ----
+let data = null;
+const view = { who: store.get('team_who') || 'all', closed: store.get('team_closed') === '1' };
+const today = () => { const d = new Date(); return new Date(d.getFullYear(), d.getMonth(), d.getDate()); };
+const daysTo = (s) => Math.round((new Date(s + 'T00:00:00') - today()) / 86400000);
+
+function dueLabel(p) {
+  if (!p.due || !/^\d{4}/.test(p.due)) return p.due ? `<span class="due">納期 ${esc(p.due)}</span>` : '<span class="due">納期 未定</span>';
+  const n = daysTo(p.due);
+  if (CLOSED.test(p.stage)) return `<span class="due">納期 ${esc(p.due.slice(5))}</span>`;
+  const cls = n < 0 ? 'late' : n <= 7 ? 'soon' : '';
+  const txt = n < 0 ? `${-n}日超過` : n === 0 ? '今日' : `あと${n}日`;
+  return `<span class="due ${cls}">納期 ${esc(p.due.slice(5))}（${txt}）</span>`;
+}
+function cardHTML(p) {
+  const color = `var(${STAGES[p.stage] || '--s-make'})`;
+  const logs = p.logs.length ? `<details><summary>最近の動き（${esc(p.updated)}）</summary><ul>${p.logs.map((l) => `<li>${esc(l.date.slice(5))} ${esc(l.who)}：${esc(l.text)}</li>`).join('')}</ul></details>` : `<details><summary>最終更新 ${esc(p.updated)}</summary></details>`;
+  return `<article class="card${p.risk ? ' risk' : ''}">
+    <h3>${esc(p.title)}</h3>
+    ${p.client ? `<div class="client">${esc(p.client)}</div>` : ''}
+    <div class="row"><span class="badge" style="background:${color}">${esc(p.stage)}</span>${dueLabel(p)}${p.owner ? `<span class="due">担当 ${esc(p.owner)}</span>` : ''}</div>
+    <div class="bar" role="img" aria-label="進捗 ${p.progress}%"><i style="width:${p.progress}%;background:${color}"></i></div>
+    <div class="pct">進捗 ${p.progress}%</div>
+    ${p.risk ? `<div class="riskline">⚠ 遅れ：${esc(p.risk)}</div>` : ''}
+    ${p.next ? `<div class="next">${esc(p.next)}</div>` : ''}
+    ${logs}
+  </article>`;
+}
+function sortKey(p) {
+  return [p.risk ? 0 : 1, CLOSED.test(p.stage) ? 1 : 0, p.due && /^\d{4}/.test(p.due) ? p.due : '9999', p.title].join('|');
+}
+function render() {
+  if (!data) return;
+  const { members, projects, at } = data;
+  const shown = projects.filter((p) => (view.who === 'all' || p.who === view.who) && (view.closed || !CLOSED.test(p.stage)));
+  $('filters').innerHTML = [{ id: 'all', name: '全員' }, ...members].map((m) => `<button type="button" data-who="${esc(m.id)}" aria-pressed="${view.who === m.id}">${esc(m.name)}</button>`).join('')
+    + `<span class="gap"></span><button type="button" id="toggle-closed" aria-pressed="${view.closed}">完了も表示</button>`;
+  const open = projects.filter((p) => (view.who === 'all' || p.who === view.who) && !CLOSED.test(p.stage));
+  const late = open.filter((p) => p.risk || (p.due && /^\d{4}/.test(p.due) && daysTo(p.due) < 0)).length;
+  const soon = open.filter((p) => p.due && /^\d{4}/.test(p.due) && daysTo(p.due) >= 0 && daysTo(p.due) <= 7).length;
+  const wait = open.filter((p) => p.stage === '納品待ち').length;
+  $('kpis').innerHTML = `<div class="win"><b>${open.length}</b><span>進行中</span></div>
+    <div class="win bad"><b>${late}</b><span>遅れ・超過</span></div>
+    <div class="win soon"><b>${soon}</b><span>7日以内に納期</span></div>
+    <div class="win"><b>${wait}</b><span>納品待ち</span></div>`;
+  const cols = (view.who === 'all' ? members : members.filter((m) => m.id === view.who)).map((m) => {
+    const mine = shown.filter((p) => p.who === m.id).sort((a, b) => sortKey(a).localeCompare(sortKey(b)));
+    const last = projects.filter((p) => p.who === m.id).map((p) => p.updated).sort().pop();
+    return `<section class="win col"><span class="tab">${esc(m.name)}</span>
+      <p class="meta">${mine.length} 件${last ? `・最終更新 ${esc(last)}` : ''}</p>
+      ${mine.map(cardHTML).join('') || '<div class="empty">表示する案件はまだありません。</div>'}
+    </section>`;
+  });
+  $('cols').innerHTML = cols.join('');
+  $('sub').textContent = `${members.map((m) => m.name).join('・')}の本業の案件`;
+  $('status').textContent = `データ更新 ${new Date(at).toLocaleString('ja-JP')}／読み込み ${new Date().toLocaleTimeString('ja-JP')}`;
+}
+$('filters').addEventListener('click', (ev) => {
+  const b = ev.target.closest('button');
+  if (!b) return;
+  // （下の cols のクリックは別に登録）
+  if (b.id === 'toggle-closed') { view.closed = !view.closed; store.set('team_closed', view.closed ? '1' : '0'); }
+  else { view.who = b.dataset.who; store.set('team_who', view.who); }
+  render();
+});
+
+$('cols').addEventListener('click', (ev) => { const n = ev.target.closest('.next'); if (n) n.classList.toggle('open'); });
+
+// ---- 読み込み ----
+function showSetup(error) {
+  $('f-repo').value = store.get('team_repo') || 'yuta054106-jpg/tenka-team';
+  $('f-token').value = '';
+  $('f-err').textContent = error || '';
+  $('setup').classList.add('show');
+}
+let loading = false;
+async function load() {
+  if (loading) return;
+  if (!LOCAL && !(store.get('team_repo') && store.get('team_token'))) { showSetup(); return; }
+  loading = true;
+  try {
+    const { files, at } = LOCAL ? await filesFromLocal() : await filesFromGitHub();
+    let members = [];
+    try { members = JSON.parse(files['team.json'] || '{}').members || []; } catch {}
+    const projects = Object.entries(files).filter(([p]) => p !== 'team.json').map(([p, md]) => parseCard(p, md));
+    for (const id of new Set(projects.map((p) => p.who))) if (!members.some((m) => m.id === id)) members.push({ id, name: id });
+    if (view.who !== 'all' && !members.some((m) => m.id === view.who)) view.who = 'all';
+    data = { members, projects, at };
+    render();
+  } catch (e) {
+    if (e.status === 401 || e.status === 403 || e.status === 404) showSetup('読み込めませんでした（' + e.message + '）。リポジトリ名とトークン、リポジトリへの招待を承認済みかを確かめてください。');
+    else $('status').textContent = '読み込みに失敗しました：' + e.message;
+  } finally { loading = false; }
+}
+$('setup-form').onsubmit = (ev) => {
+  ev.preventDefault();
+  const repo = $('f-repo').value.trim().replace(/^https:\/\/github\.com\//, '').replace(/\/$/, '');
+  const token = $('f-token').value.trim();
+  if (!/^[\w.-]+\/[\w.-]+$/.test(repo)) { $('f-err').textContent = 'リポジトリは「ユーザー名/リポジトリ名」の形で入力してください。'; return; }
+  if (!token) { $('f-err').textContent = 'トークンを入力してください。'; return; }
+  store.set('team_repo', repo); store.set('team_token', token); blobCache.clear();
+  $('setup').classList.remove('show');
+  load();
+};
+$('f-forget').onclick = () => { store.del('team_token'); store.del('team_repo'); showSetup('設定を消しました。'); };
+$('settings').onclick = () => showSetup();
+$('refresh').onclick = () => load();
+document.addEventListener('visibilitychange', () => { if (!document.hidden) load(); });
+load();
+setInterval(load, 120000);
+</script>
+</body>
+</html>
