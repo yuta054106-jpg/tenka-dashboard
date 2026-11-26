@@ -9,6 +9,7 @@
     return /^05_projects\/[^_/][^/]*\/README\.md$/.test(p)
       || /^05_projects\/_inbox\/[^_/][^/]*\.md$/.test(p)
       || (/^05_projects\/_gpt\/[^_/][^/]*\.md$/.test(p) && !/\/README\.md$/.test(p))
+      || (/^05_projects\/_todo\/[^_/][^/]*\.md$/.test(p) && !/\/README\.md$/.test(p))
       || /^05_projects\/_応募候補\/(done\/)?\d{4}-\d{2}-\d{2}[^/]*\.md$/.test(p)
       || /^00_board\/decisions\/[^_/][^/]*\.md$/.test(p)
       || /^03_reports\/(daily|weekly|monthly|morning)\/\d{4}-\d{2}-\d{2}[^/]*\.md$/.test(p)
@@ -96,12 +97,20 @@
     const list = [];
     for (const [p, md] of Object.entries(files)) {
       // Claude 側は 05_projects/<案件>/README.md、GPT 側は 05_projects/_gpt/<リポジトリ>_<番号>.md（sync-gpt.js が作る）
-      const m = p.match(/^05_projects\/([^_/][^/]*)\/README\.md$/) || p.match(/^05_projects\/(_gpt\/(?!README\.md$)[^/]+)\.md$/);
+      const m = p.match(/^05_projects\/([^_/][^/]*)\/README\.md$/) || p.match(/^05_projects\/(_gpt\/(?!README\.md$)[^/]+)\.md$/)
+        || p.match(/^05_projects\/(_todo\/(?!README\.md$)[^_/][^/]*)\.md$/); // 主要TODO（経営会議01 合意：1件1ファイル・種別 TODO）
       if (!m || !md) continue;
       const { out: f, clean } = fields(md);
       const done = (clean.match(/^\s*-\s*\[x\]/gim) || []).length;
       const todo = (clean.match(/^\s*-\s*\[ \]\s*\S/gm) || []).length;
-      const stage = blank(f['ステージ']) ? '要件定義' : f['ステージ'];
+      const isTodo = m[1].startsWith('_todo/');
+      // TODO は「状態」「期限」「次の行動」で書く（案件カードの「ステージ」「納期」「次のアクション」と同じ扱い）
+      if (isTodo) {
+        if (blank(f['ステージ']) && !blank(f['状態'])) f['ステージ'] = f['状態'];
+        if (blank(f['納期']) && !blank(f['期限'])) f['納期'] = f['期限'];
+        if (!f['次のアクション'] && f['次の行動']) f['次のアクション'] = f['次の行動'];
+      }
+      const stage = blank(f['ステージ']) ? (isTodo ? '未着手' : '要件定義') : f['ステージ'];
       const risk = /^あり/.test(f['遅れリスク'] || '') ? (f['遅れリスク'].replace(/^あり\s*[:：]?\s*/, '') || '理由未記入') : '';
       // 障害：カードの「障害」欄。GPT 側の [BLOCKED]（ステージ「止まっている」）も障害として数える
       let blocker = val(f['障害']);
@@ -111,7 +120,10 @@
         folder: m[1],
         path: p,
         // どちらの AI の案件か・どの事業部か（2026-11-26 オーナー「クロードとGPTの案件も統合して見れること」）
-        source: m[1].startsWith('_gpt/') ? 'GPT' : 'Claude',
+        source: m[1].startsWith('_gpt/') || (isTodo && /エレン|GPT/i.test(f['責任者'] || '')) ? 'GPT' : 'Claude',
+        type: isTodo ? 'TODO' : '案件',
+        nextCheck: val(f['次回確認日']),
+        parent: val(f['親案件']),
         dept: blank(f['事業部']) ? '' : f['事業部'],
         url: /^https?:\/\//.test(f['URL'] || '') ? f['URL'] : '',
         name: title(md) || m[1],

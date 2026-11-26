@@ -714,7 +714,7 @@ function projRow(p) {
   const key = p.name;
   const open = openQuests.has(key);
   return `<div class="lrow click prow" data-row="${esc(key)}">
-    <div class="p-head">${srcChip(p)}<button class="pname" type="button" data-toggle="${esc(key)}" aria-expanded="${open}">${esc(p.name)}</button>${p.source !== 'GPT' && p.dept ? chip('stg', deptName(p.dept)) : ''}${p.priority ? chip('gry', `優先度 ${p.priority}`) : ''}${stageChip(p)}${stateChips(p, i)}</div>
+    <div class="p-head">${srcChip(p)}${p.type === 'TODO' ? chip('gry', 'TODO') : ''}<button class="pname" type="button" data-toggle="${esc(key)}" aria-expanded="${open}">${esc(p.name)}</button>${p.source !== 'GPT' && p.dept ? chip('stg', deptName(p.dept)) : ''}${p.priority ? chip('gry', `優先度 ${p.priority}`) : ''}${stageChip(p)}${stateChips(p, i)}</div>
     <div class="p-due">${dueHtml(i)}</div>
     <div class="p-next">${p.next ? `<div class="clamp1"><span class="lbl">次：</span>${esc(p.next)}</div>` : `<span class="lbl">次：</span>${NONE}`}</div>
     <div class="p-who">${facesHtml(p)}</div>
@@ -727,7 +727,7 @@ function projRow(p) {
 // ---- 画面の状態（端末に覚える：区分・事業部・開いた行） ----
 let questFilter = store.get('questFilter') || 'すべて';
 let deptFilter = store.get('deptFilter') || 'すべて';
-if (!['すべて', 'Claude', 'GPT'].includes(questFilter)) { deptFilter = questFilter; questFilter = 'すべて'; }
+if (!['すべて', 'Claude', 'GPT', 'TODO'].includes(questFilter)) { deptFilter = questFilter; questFilter = 'すべて'; }
 const openQuests = new Set((() => { try { return JSON.parse(store.get('openQuests') || '[]'); } catch (e) { return []; } })());
 const saveOpen = () => store.set('openQuests', JSON.stringify([...openQuests]));
 let needOnly = false, query = '', projLimit = 20, doneLimit = 20, blkAll = false, recentAll = false, askAll = false, teamAll = false, orgSel = 0, mrOpen = false;
@@ -869,9 +869,9 @@ function renderAsks(allAsks, openAsks) {
 
 function renderProjects(active, finished) {
   const srcOf = (p) => p.source || 'Claude';
-  const bySrc = (f) => active.filter((p) => f === 'すべて' || srcOf(p) === f);
+  const bySrc = (f) => active.filter((p) => f === 'すべて' || (f === 'TODO' ? p.type === 'TODO' : srcOf(p) === f));
   $('proj-n').textContent = `進行中 ${active.length}件`;
-  $('p-seg').innerHTML = ['すべて', 'Claude', 'GPT'].map((f) => `<button type="button" data-seg="${f}" class="${f === questFilter ? 'on' : ''}" aria-pressed="${f === questFilter}">${f} ${bySrc(f).length}</button>`).join('');
+  $('p-seg').innerHTML = ['すべて', 'Claude', 'GPT', 'TODO'].map((f) => `<button type="button" data-seg="${f}" class="${f === questFilter ? 'on' : ''}" aria-pressed="${f === questFilter}">${f} ${bySrc(f).length}</button>`).join('');
   const pool = bySrc(questFilter);
   const depts = {};
   pool.forEach((p) => { if (p.dept && p.source !== 'GPT') depts[p.dept] = (depts[p.dept] || 0) + 1; });
