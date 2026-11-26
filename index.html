@@ -114,6 +114,14 @@
   .quest .clamp { display: -webkit-box; -webkit-line-clamp: 1; -webkit-box-orient: vertical; overflow: hidden; }
   .q-more { grid-column: 2 / -1; justify-self: start; background: none; border: 1px solid var(--sub); color: var(--sub); font: inherit; font-size: 12px; padding: 2px 10px; border-radius: 4px; cursor: pointer; }
   .q-more:hover { color: var(--text); border-color: var(--text); }
+  /* Claude と GPT の案件を並べて見る（2026-11-26） */
+  .qfilter { display: flex; flex-wrap: wrap; gap: 6px; margin: 0 0 10px; }
+  .qfilter button { background: none; border: 1px solid var(--sub); color: var(--sub); font: inherit; font-size: 12px; padding: 2px 10px; border-radius: 4px; cursor: pointer; }
+  .qfilter button.on { color: var(--text); border-color: var(--text); }
+  .src { font-size: 11px; padding: 0 6px; border-radius: 4px; border: 1px solid; }
+  .src.claude { color: #ffa63f; border-color: #ffa63f; }
+  .src.gpt { color: #3fe0d0; border-color: #3fe0d0; }
+  .q-name a { color: inherit; }
   .due.soon { color: var(--mid); }
   .due.over { color: var(--low); animation: blink 1s steps(2) infinite; }
   .stage { font-size: 13px; }
@@ -251,6 +259,7 @@
 
       <section class="win">
         <span class="tab">案件一覧</span>
+        <div class="qfilter" id="qfilter"></div>
         <div class="quests" id="projects"></div>
       </section>
     </div>
@@ -298,7 +307,9 @@
 <script src="sprites.js"></script>
 <script src="parse.js"></script>
 <script>
-const STAGE_COLOR = { '要件定義': '--s-req', '制作中': '--s-make', 'テスト': '--s-test', '納品待ち': '--s-wait', '納品済み': '--s-done', '中止': '--s-stop' };
+const STAGE_COLOR = { '要件定義': '--s-req', '着手前': '--s-req', '制作中': '--s-make', 'テスト': '--s-test', 'レビュー待ち': '--s-wait', '納品待ち': '--s-wait', '止まっている': '--low', '納品済み': '--s-done', '中止': '--s-stop' };
+// 案件一覧の絞り込み（すべて / Claude / GPT / 事業部）。端末に覚えておく
+let questFilter = localStorage.getItem('questFilter') || 'すべて';
 const $ = (id) => document.getElementById(id);
 const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 const face = (name) => Sprites.svg(Sprites.who(name) || name, 32);
@@ -405,6 +416,8 @@ setInterval(nextMessage, 7000);
 const openQuests = new Set((() => { try { return JSON.parse(localStorage.getItem('openQuests') || '[]'); } catch (e) { return []; } })());
 let lastState = null;
 document.addEventListener('click', (ev) => {
+  const fb = ev.target.closest && ev.target.closest('#qfilter button');
+  if (fb) { questFilter = fb.dataset.f; localStorage.setItem('questFilter', questFilter); if (lastState) render(lastState); return; }
   const b = ev.target.closest && ev.target.closest('.q-more');
   if (!b) return;
   const k = b.dataset.key;
@@ -462,8 +475,8 @@ function render(s) {
     return `<div class="quest ${i === 0 ? 'first' : ''}">
       <span class="cursor">▶</span>
       <div>
-        <div class="q-name">${esc(p.name)}</div>
-        <div class="q-meta">${[p.client, p.kind].filter(Boolean).map((x) => `<span>${esc(x)}</span>`).join('')}${p.amount ? `<span class="reward">${esc(p.amount)}</span>` : ''}${dueLabel(p.due)}${p.internalDue ? dueLabel(p.internalDue, '社内締切') : ''}${p.risk ? '<span class="risk">遅れそう</span>' : ''}</div>
+        <div class="q-name">${p.url ? `<a href="${esc(p.url)}" target="_blank" rel="noopener">${esc(p.name)}</a>` : esc(p.name)}</div>
+        <div class="q-meta"><span class="src ${p.source === 'GPT' ? 'gpt' : 'claude'}">${esc(p.source || 'Claude')}</span>${p.dept && p.dept !== 'GPT' ? `<span>${esc(p.dept)}</span>` : ''}${[p.client, p.kind].filter(Boolean).map((x) => `<span>${esc(x)}</span>`).join('')}${p.amount ? `<span class="reward">${esc(p.amount)}</span>` : ''}${dueLabel(p.due)}${p.internalDue ? dueLabel(p.internalDue, '社内締切') : ''}${p.risk ? '<span class="risk">遅れそう</span>' : ''}</div>
       </div>
       <div class="bars">
         <span class="stage" style="color:${color}">【${esc(p.stage)}】</span> <span class="num">${p.progress}%</span>
@@ -476,7 +489,15 @@ function render(s) {
       ${(p.next || p.risk || (p.schedule && p.schedule.length)) ? `<button class="q-more" data-key="${esc(p.name)}">${openQuests.has(p.name) ? '閉じる' : '全文表示'}</button>` : ''}
     </div>`;
   };
-  $('projects').innerHTML = active.length ? active.map(quest).join('')
+  // 絞り込み：すべて / Claude / GPT / 事業部ごと（件数つき）
+  const depts = [...new Set(active.map((p) => p.dept).filter((d) => d && d !== 'GPT'))];
+  const filters = ['すべて', 'Claude', 'GPT', ...depts];
+  if (!filters.includes(questFilter)) questFilter = 'すべて';
+  const match = (p, f) => f === 'すべて' || (f === 'Claude' || f === 'GPT' ? (p.source || 'Claude') === f : p.dept === f);
+  $('qfilter').innerHTML = filters.map((f) => `<button data-f="${esc(f)}" class="${f === questFilter ? 'on' : ''}">${esc(f)} ${active.filter((p) => match(p, f)).length}</button>`).join('');
+  const shown = active.filter((p) => match(p, questFilter));
+  $('projects').innerHTML = shown.length ? shown.map(quest).join('')
+    : active.length ? `<div class="empty">「${esc(questFilter)}」の進行中の案件はありません。</div>`
     : `<div class="empty">進行中の案件はありません。<br>応募を決めた案件を GitHub の 05_projects/_inbox/ に入れると、オウセンたちが着手します。</div>`;
   if (finished) $('projects').innerHTML += `<div class="empty">完了・中止: ${finished}件</div>`;
 

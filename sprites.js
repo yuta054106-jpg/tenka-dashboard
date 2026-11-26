@@ -44,10 +44,20 @@
       colors: { h: '#4a3b52', c: '#5a4fa8', a: '#cfd3e6' },
       rows: { 5: '..hhhhhhhhhhhh..', 11: '..hssssssssssh..' },
     },
+    'キタリ': {
+      role: 'フロント', kanji: 'キタリ', job: 'フロントエンド',
+      colors: { h: '#5b3a29', c: '#8a5a2b', a: '#e6d3a3', p: '#d94343' },
+      rows: { 0: '....p......p....', 5: '..hhhhhhhhhhhh..', 11: '..hssssssssssh..' },
+    },
     'トウ': {
       role: 'バックエンド', kanji: '騰', job: 'れんけい',
       colors: { h: '#2b2b33', c: '#2e7d6b', a: '#d9d2c5', p: '#2b2b33' },
       rows: { 0: '.....pppppp.....', 8: '..hsseesseessh..', 10: '..hsssmmmmsssh..' },
+    },
+    'バジオウ': {
+      role: 'バックエンド', kanji: 'バジオウ', job: 'れんけい',
+      colors: { h: '#1f1f1f', c: '#5c6b3a', a: '#d9d2c5', p: '#e8e1cf' },
+      rows: { 0: '...pp......pp...', 8: '..hsskksskkssh..' },
     },
     'テン': {
       role: 'CMO', kanji: '河了貂', job: 'ぐんし',

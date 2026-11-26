@@ -8,6 +8,7 @@
   function wanted(p) {
     return /^05_projects\/[^_/][^/]*\/README\.md$/.test(p)
       || /^05_projects\/_inbox\/[^_/][^/]*\.md$/.test(p)
+      || (/^05_projects\/_gpt\/[^_/][^/]*\.md$/.test(p) && !/\/README\.md$/.test(p))
       || /^05_projects\/_応募候補\/(done\/)?\d{4}-\d{2}-\d{2}[^/]*\.md$/.test(p)
       || /^00_board\/decisions\/[^_/][^/]*\.md$/.test(p)
       || /^03_reports\/(daily|weekly|monthly|morning)\/\d{4}-\d{2}-\d{2}[^/]*\.md$/.test(p)
@@ -75,7 +76,8 @@
   function projects(files) {
     const list = [];
     for (const [p, md] of Object.entries(files)) {
-      const m = p.match(/^05_projects\/([^_/][^/]*)\/README\.md$/);
+      // Claude 側は 05_projects/<案件>/README.md、GPT 側は 05_projects/_gpt/<リポジトリ>_<番号>.md（sync-gpt.js が作る）
+      const m = p.match(/^05_projects\/([^_/][^/]*)\/README\.md$/) || p.match(/^05_projects\/(_gpt\/(?!README\.md$)[^/]+)\.md$/);
       if (!m || !md) continue;
       const { out: f, clean } = fields(md);
       const done = (clean.match(/^\s*-\s*\[x\]/gim) || []).length;
@@ -87,6 +89,10 @@
       if (Number.isNaN(progress)) progress = done + todo ? Math.round((done / (done + todo)) * 100) : 0;
       list.push({
         folder: m[1],
+        // どちらの AI の案件か・どの事業部か（2026-11-26 オーナー「クロードとGPTの案件も統合して見れること」）
+        source: m[1].startsWith('_gpt/') ? 'GPT' : 'Claude',
+        dept: blank(f['事業部']) ? '' : f['事業部'],
+        url: /^https?:\/\//.test(f['URL'] || '') ? f['URL'] : '',
         name: title(md) || m[1],
         client: blank(f['クライアント']) ? '' : f['クライアント'],
         kind: blank(f['種別']) ? '' : f['種別'],
