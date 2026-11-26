@@ -408,6 +408,23 @@
   // 誰が：1行目の「名前:」（チームの名前のときだけ）→ board-bot は「経営会議」→ Claude は「巡回」→ それ以外は「PC」
   // 副業の語を含むコミットは出さない
   const SIDE = /クラウドワークス|ランサーズ|応募候補_CW|tenka-cw|crowdworks|lancers|CW/i;
+
+  // 画面に渡す全データから副業の語を取り除く（オウホン検査 重大1：案件のログ・次の行動・日程などに書かれても出さない）
+  // 配列の要素（文字列・オブジェクト）は丸ごと外し、単独の文字列は伏せる。語の判定は単語としての CW だけ（URL 等の誤検知を避ける）
+  const SIDE_WORD = /クラウドワークス|ランサーズ|応募候補_CW|tenka-cw|crowdworks|lancers|(^|[^A-Za-z])CW([^A-Za-z]|$)/i;
+  // 外すのは「文字列」か「文字列だけでできた小さな行」（ログの1行・日程の1行など）。案件そのもの（中に配列を持つもの）は外さず、中を掃除する
+  const flat = (v) => v && typeof v === 'object' && !Array.isArray(v) && Object.values(v).every((x) => x === null || typeof x !== 'object');
+  const hit = (v) => (typeof v === 'string' ? SIDE_WORD.test(v)
+    : flat(v) ? Object.values(v).some((x) => typeof x === 'string' && SIDE_WORD.test(x)) : false);
+  function hideSide(v) {
+    if (Array.isArray(v)) return v.filter((x) => !hit(x)).map(hideSide);
+    if (v && typeof v === 'object') {
+      const o = {};
+      for (const [k, x] of Object.entries(v)) o[k] = typeof x === 'string' && SIDE_WORD.test(x) ? '（個人の作業のため非表示）' : hideSide(x);
+      return o;
+    }
+    return v;
+  }
   function recent(list, now) {
     const t0 = (now ? Date.parse(now) : Date.now()) - 48 * 3600e3;
     return (list || [])
@@ -437,7 +454,7 @@
       org: org(files),
       recent: recent(extra.recent, extra.now),
       team: team(list, extra.now),
-      ops: { heartbeat: hb, lastCommit: extra.lastCommit || null, nextRun: nextRun(), prevRun: prevRun(), gptSync: extra.gptSync || null },
+      ops: { heartbeat: hb, lastCommit: extra.lastCommit || null, nextRun: nextRun(), prevRun: prevRun(), gptSync: extra.gptSync || null, gptSyncKnown: 'gptSync' in extra },
       inbox: inbox(files),
       applications: applications(files),
       decisions: decisions(files),
@@ -447,7 +464,7 @@
       now: new Date().toISOString(),
     };
     st.asks = asks(st, answers(files));
-    return st;
+    return hideSide(st);
   }
 
   // 回答ファイル（00_board/answers/ に置く。オウセンが反映したら done/ へ移す）の中身

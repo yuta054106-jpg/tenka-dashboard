@@ -616,9 +616,10 @@ function info(p) {
   const age = upd === null ? null : -upd;
   const stale = !done && age !== null && age > (p.staleDays || 3) ? age : null;
   let unsynced = null;
-  if (p.source === 'GPT' && !done && lastState && lastState.ops && lastState.ops.gptSync) {
-    // 未同期は PC のサーバーが覚えている最後の取り込み時刻で判断する（スマホ版では判断しない）
-    const t = Date.parse(lastState.ops.gptSync);
+  if (p.source === 'GPT' && !done && lastState && lastState.ops && lastState.ops.gptSyncKnown) {
+    // 未同期は PC のサーバーが覚えている最後の取り込み時刻で判断する（スマホ版では判断しない）。
+    // サーバーの起動から一度も成功していなければ「未同期」（オウホン検査 軽微2）
+    const t = lastState.ops.gptSync ? Date.parse(lastState.ops.gptSync) : NaN;
     if (isNaN(t)) unsynced = -1;
     else if (Date.now() - t > 3600e3) unsynced = Math.floor((Date.now() - t) / 3600e3);
   }
@@ -704,7 +705,8 @@ function metaHtml(p) {
     : `<span>進捗 <span class="tnum">${p.progress}%</span><span class="pbar" aria-hidden="true"><i style="width:${p.progress}%"></i></span></span>`);
   m.push(p.updated ? `<span>最終更新 <span class="tnum">${esc(fmtDay(p.updated))}</span>（申告）</span>` : `<span>最終更新 ${NONE}</span>`);
   m.push(p.commitAt ? `<span>コミット <span class="tnum">${esc(fmtAt(p.commitAt))}</span></span>` : `<span>コミット ${NOGET}</span>`);
-  if (p.source === 'GPT') m.push(p.synced && !isNaN(Date.parse(p.synced)) ? `<span>同期 <span class="tnum">${esc(fmtAt(p.synced))}</span></span>` : `<span>同期 ${NOGET}</span>`);
+  // GPT 側：カードの時刻は「内容が最後に変わった取り込み」。取り込みの成否は稼働状況の「GPT の同期」で見る（オウホン検査 軽微3）
+  if (p.source === 'GPT') m.push(p.synced && !isNaN(Date.parse(p.synced)) ? `<span>内容の取り込み <span class="tnum">${esc(fmtAt(p.synced))}</span></span>` : `<span>内容の取り込み ${NOGET}</span>`);
   return `<div class="p-meta">${m.join('')}</div>`;
 }
 function projRow(p) {
@@ -927,7 +929,7 @@ function renderOps(s) {
   const st = !last ? ['', '巡回の記録がありません'] : !missed ? ['ok', '巡回は動いています'] : ['warn', '巡回が止まっている可能性があります'];
   const gpt = s.projects.filter((p) => p.source === 'GPT');
   const latest = s.ops.gptSync || null; // PC 版だけが知っている。スマホ版は未取得
-  const gptSync = !gpt.length ? NOGET : !latest ? NOGET
+  const gptSync = !gpt.length ? NOGET : !latest ? (s.ops.gptSyncKnown ? chip('pur', '未同期') : NOGET)
     : `${esc(fmtAt(latest))}${Date.now() - Date.parse(latest) > 3600e3 ? ' ' + chip('pur', `未同期・${Math.floor((Date.now() - Date.parse(latest)) / 3600e3)}時間前`) : ''}`;
   const rows = [
     ['最終巡回', last ? `${esc(fmtAt(last))}（${esc(ago(last))}）` : '—'],
@@ -1127,6 +1129,8 @@ function showSetup(error, clear) {
 let loading = false;
 async function load() {
   if (loading) return;
+  // 設定画面を開いている間は読み直さない（入れかけのトークンが消えるため。オウホン検査 軽微5）
+  if (!LOCAL && $('setup') && $('setup').classList.contains('show')) return;
   loading = true;
   try {
     if (LOCAL) {
