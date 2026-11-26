@@ -4,302 +4,515 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>TENKA LAB</title>
+<meta name="description" content="TENKA LAB の社内ダッシュボード">
+<meta name="robots" content="noindex">
 <link rel="icon" href="icon-192.png">
 <link rel="apple-touch-icon" href="icon-180.png">
 <link rel="manifest" href="manifest.webmanifest">
-<meta name="theme-color" content="#07071c">
+<meta name="theme-color" content="#F5F5F7" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#000000" media="(prefers-color-scheme: dark)">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="black">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="apple-mobile-web-app-title" content="TENKA LAB">
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=DotGothic16&display=swap" rel="stylesheet">
 <style>
   :root {
-    --page: #07071c; --win: #000000; --line: #ffffff; --text: #ffffff; --sub: #a9a9c8; --faint: #6d6d8f;
-    --gold: #ffd23f; --hp: #4ade80; --mid: #ffd23f; --low: #ff5a5a; --mp: #5aa9ff;
-    --s-req: #b28cff; --s-make: #5aa9ff; --s-test: #3fe0d0; --s-wait: #ffa63f; --s-done: #4ade80; --s-stop: #8f8fa8;
+    --bg: #F5F5F7; --card: #FFFFFF; --fill: #F5F5F7; --line: #E5E5EA;
+    --text: #1D1D1F; --text-2: #6E6E73;
+    --accent: #0071E3; --link: #0071E3; --on-accent: #FFFFFF; --btn-2: #E8E8ED;
+    --bar: rgba(245,245,247,0.72);
+    --red-t: #D70015; --red-b: #FFEBEE;
+    --org-t: #C93400; --org-b: #FFF4E5;
+    --gry-t: #6E6E73; --gry-b: #E8E8ED;
+    --pur-t: #8944AB; --pur-b: #F5EEF8;
+    --grn-t: #248A3D; --grn-b: #E8F5EC;
+    --cl-t: #A0522D; --cl-b: #FBF1EA;
+    --gp-t: #0E7C86; --gp-b: #E6F4F5;
+    --dot: #34C759; --dot-off: #AEAEB2;
+    --ring: rgba(0,0,0,0.06);
+    --shadow: 0 1px 2px rgba(0,0,0,0.04), 0 4px 16px rgba(0,0,0,0.06);
+    --card-border: none;
+    --seg-shadow: 0 1px 3px rgba(0,0,0,.12);
+    --font: -apple-system, BlinkMacSystemFont, "Hiragino Sans", "Hiragino Kaku Gothic ProN", "Yu Gothic UI", "Meiryo", system-ui, sans-serif;
+    --pad: 24px; --gap: 24px; --sep: 24px;
+    color-scheme: light dark;
   }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #000000; --card: #1C1C1E; --fill: #2C2C2E; --line: #38383A;
+      --text: #F5F5F7; --text-2: #A1A1A6;
+      --link: #2997FF; --btn-2: #3A3A3C;
+      --bar: rgba(0,0,0,0.72);
+      --red-t: #FF6961; --red-b: #3A1D1F;
+      --org-t: #FF9F0A; --org-b: #3A2A12;
+      --gry-t: #A1A1A6; --gry-b: #2C2C2E;
+      --pur-t: #BF5AF2; --pur-b: #2E1F36;
+      --grn-t: #30D158; --grn-b: #17301F;
+      --cl-t: #F0A07A; --cl-b: #3A2A22;
+      --gp-t: #5AC8D0; --gp-b: #17302F;
+      --ring: rgba(255,255,255,0.08);
+      --shadow: none;
+      --card-border: 1px solid var(--line);
+      --seg-shadow: 0 1px 3px rgba(0,0,0,.5);
+    }
+  }
+  @media (max-width: 767px) { :root { --pad: 16px; --gap: 16px; --sep: 16px; } }
+
   * { box-sizing: border-box; }
-  html { background: var(--page); }
+  html { background: var(--bg); -webkit-text-size-adjust: 100%; }
   body {
-    margin: 0; color: var(--text); background: var(--page);
-    background-image: radial-gradient(#ffffff14 1px, transparent 1px);
-    background-size: 22px 22px;
-    font-family: "DotGothic16", "MS Gothic", "Osaka-Mono", monospace;
-    font-size: 15px; line-height: 1.6; letter-spacing: .04em;
-    -webkit-font-smoothing: none; image-rendering: pixelated;
+    margin: 0; background: var(--bg); color: var(--text); font-family: var(--font);
+    font-size: 15px; line-height: 1.6; letter-spacing: 0; -webkit-font-smoothing: antialiased;
   }
-  .wrap { max-width: 1280px; margin: 0 auto; padding: 18px 20px 150px; }
-  @media (max-width: 640px) { .wrap { padding: 12px 16px 170px; } }
+  h1, h2, h3, h4, p { margin: 0; }
+  a { color: var(--link); text-decoration: none; }
+  a:hover { text-decoration: underline; }
+  :focus-visible { outline: 3px solid rgba(0,113,227,0.4); outline-offset: 2px; }
+  .num, time, .tnum { font-variant-numeric: tabular-nums; }
+  .sub { font-size: 13px; color: var(--text-2); line-height: 1.5; }
+  .clamp1 { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; min-width: 0; }
+  .clamp2 { display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; line-clamp: 2; overflow: hidden; overflow-wrap: anywhere; }
+  .vh { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
 
-  /* RPG ウィンドウ */
-  .win {
-    background: var(--win); border: 3px solid var(--line); border-radius: 8px;
-    box-shadow: 0 0 0 3px var(--win), 0 6px 0 3px #0008; padding: 14px 16px 16px; position: relative;
+  /* ヘッダー */
+  .hdr { position: sticky; top: 0; z-index: 20; background: var(--bar);
+    -webkit-backdrop-filter: saturate(180%) blur(20px); backdrop-filter: saturate(180%) blur(20px); border-bottom: 1px solid var(--line); }
+  .hdr-in { max-width: 1200px; margin: 0 auto; height: 52px; padding: 0 40px; display: flex; align-items: center; gap: 24px; }
+  .hdr h1 { font-size: 17px; font-weight: 700; letter-spacing: 0.01em; white-space: nowrap; }
+  .hnav { display: flex; gap: 16px; }
+  .hnav a { font-size: 13px; color: var(--text-2); }
+  .hnav a.on { color: var(--text); }
+  .hnav a:hover { text-decoration: none; color: var(--text); }
+  .hsp { flex: 1; }
+  .htime { font-size: 13px; color: var(--text-2); white-space: nowrap; }
+  .cnav { display: none; }
+  @media (max-width: 767px) {
+    .hdr-in { padding: 0 16px; gap: 8px; }
+    .hdr-in h1 { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 17px; }
+    .htime { font-size: 12px; }
+    .hdr-in .btn { flex: none; padding-left: 10px; padding-right: 10px; }
+    .hnav { display: none; }
+    .cnav { display: flex; gap: 8px; height: 44px; align-items: center; padding: 0 16px; overflow-x: auto; scrollbar-width: none; }
+    .cnav::-webkit-scrollbar { display: none; }
+    .cnav a { flex: none; height: 32px; display: inline-flex; align-items: center; padding: 0 16px; border-radius: 999px; background: var(--fill); color: var(--text); font-size: 13px; font-weight: 700; }
+    .cnav a.on { background: var(--text); color: var(--card); }
+    .cnav a:hover { text-decoration: none; }
   }
-  .win > .tab {
-    position: absolute; top: -13px; left: 14px; background: var(--win); padding: 0 8px; font-size: 13px;
-    color: var(--text); letter-spacing: .1em;
-  }
 
-  header.win { display: flex; align-items: center; gap: 14px; margin-bottom: 22px; }
-  header .avatar { width: 52px; height: 52px; }
-  header h1 { font-size: 22px; margin: 0; font-weight: 400; letter-spacing: .12em; }
-  header .sub { color: var(--sub); font-size: 13px; }
-  header .spacer { flex: 1; }
-  button {
-    font: inherit; color: var(--text); background: var(--win); border: 2px solid var(--line); border-radius: 6px;
-    padding: 6px 14px; cursor: pointer; letter-spacing: .08em;
-  }
-  button:hover, button:focus-visible { background: #fff; color: #000; outline: none; }
-  button:disabled { opacity: .5; cursor: wait; }
-
-  .grid { display: grid; grid-template-columns: minmax(0, 1fr) 360px; gap: 26px 22px; }
-  @media (max-width: 980px) { .grid { grid-template-columns: 1fr; } }
-  .col { display: flex; flex-direction: column; gap: 26px; min-width: 0; }
-
-  /* ステータス（KPI） */
-  .stats { display: grid; grid-template-columns: repeat(5, 1fr); gap: 4px 18px; }
-  @media (max-width: 640px) { .stats { grid-template-columns: repeat(2, 1fr); } }
-  .stat .label { color: var(--sub); font-size: 13px; }
-  .stat .value { font-size: 30px; color: var(--gold); line-height: 1.2; }
-  .stat .value small { font-size: 14px; color: var(--text); margin-left: 4px; }
-  .stat.alert .value { color: var(--low); }
-
-  /* クエスト */
-  .quests { display: flex; flex-direction: column; gap: 4px; }
-  .quest { display: grid; grid-template-columns: 22px minmax(0, 1fr) 170px 120px; gap: 4px 14px; align-items: center;
-    padding: 10px 6px; border-bottom: 2px dashed #ffffff26; }
-  .quest:last-child { border-bottom: 0; }
-  @media (max-width: 760px) { .quest { grid-template-columns: 22px 1fr; } .quest > .bars, .quest > .who { grid-column: 2; } }
-  .cursor { color: var(--text); visibility: hidden; }
-  .quest:hover .cursor, .quest.first .cursor { visibility: visible; animation: blink 1s steps(2) infinite; }
-  .q-name { font-size: 17px; overflow-wrap: anywhere; }
-  .q-meta { color: var(--sub); font-size: 13px; display: flex; flex-wrap: wrap; gap: 2px 14px; }
-  .q-meta .reward { color: var(--gold); }
-  .risk { color: var(--low); border: 2px solid var(--low); border-radius: 4px; padding: 0 6px; font-size: 12px; }
-  .q-risk { grid-column: 2 / -1; font-size: 13px; color: var(--low); }
-  /* 朝の報告 */
-  .morning { margin-bottom: 26px; }
-  .morning .lead { font-size: 17px; margin: 0 0 10px; }
-  .morning .cols { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 6px 22px; }
-  .morning h3 { font-size: 13px; font-weight: 400; color: var(--sub); margin: 6px 0 4px; }
-  .morning ul { list-style: none; margin: 0; padding: 0; display: grid; gap: 4px; font-size: 14px; }
-  .morning li { padding-left: 16px; position: relative; overflow-wrap: anywhere; }
-  .morning li::before { content: "・"; position: absolute; left: 0; color: var(--sub); }
-  .morning .risk-list li { color: var(--low); }
-  .morning .stale { color: var(--faint); font-size: 12px; }
-
-  /* 日程 */
-  .sched { grid-column: 2 / -1; font-size: 13px; margin-top: 2px; }
-  .sched summary { cursor: pointer; color: var(--sub); list-style: none; }
-  .sched summary::-webkit-details-marker { display: none; }
-  .sched summary::before { content: "▶ "; font-size: 10px; }
-  .sched[open] summary::before { content: "▼ "; }
-  .sched ol { list-style: none; margin: 6px 0 0; padding: 0; display: grid; gap: 4px;
-    border-left: 2px solid #ffffff33; padding-left: 10px; }
-  .sched li { display: grid; grid-template-columns: 18px 64px minmax(0, 1fr); gap: 2px 6px; align-items: baseline; }
-  .sched .mk { text-align: center; }
-  .sched .dt { color: var(--sub); font-variant-numeric: tabular-nums; white-space: nowrap; }
-  .sched .tk { overflow-wrap: anywhere; }
-  .sched .tk small { color: var(--faint); margin-left: 4px; }
-  .sched li.done { color: var(--faint); }
-  .sched li.done .mk { color: var(--hp); }
-  .sched li.doing .mk { color: var(--gold); }
-  .sched li.late, .sched li.late .dt { color: var(--low); }
-  .q-next { grid-column: 2 / -1; font-size: 13px; color: var(--text); }
-  .q-next::before { content: "次 ▷ "; color: var(--sub); }
-  .quest .clamp { display: -webkit-box; -webkit-line-clamp: 1; -webkit-box-orient: vertical; overflow: hidden; }
-  .q-more { grid-column: 2 / -1; justify-self: start; background: none; border: 1px solid var(--sub); color: var(--sub); font: inherit; font-size: 12px; padding: 2px 10px; border-radius: 4px; cursor: pointer; }
-  .q-more:hover { color: var(--text); border-color: var(--text); }
-  /* Claude と GPT の案件を並べて見る（2026-11-26） */
-  .qfilter { display: flex; flex-wrap: wrap; gap: 6px; margin: 0 0 10px; }
-  .qfilter button { background: none; border: 1px solid var(--sub); color: var(--sub); font: inherit; font-size: 12px; padding: 2px 10px; border-radius: 4px; cursor: pointer; }
-  .qfilter button.on { color: var(--text); border-color: var(--text); }
-  .src { font-size: 11px; padding: 0 6px; border-radius: 4px; border: 1px solid; }
-  .src.claude { color: #ffa63f; border-color: #ffa63f; }
-  .src.gpt { color: #3fe0d0; border-color: #3fe0d0; }
-  .q-name a { color: inherit; }
-  .due.soon { color: var(--mid); }
-  .due.over { color: var(--low); animation: blink 1s steps(2) infinite; }
-  .stage { font-size: 13px; }
-  .bar { height: 12px; border: 2px solid var(--line); border-radius: 3px; background: #222; margin-top: 4px; padding: 1px; }
-  .bar i { display: block; height: 100%; background: var(--hp); }
-  .bar.mp i { background: var(--mp); }
-  .num { font-size: 13px; color: var(--sub); }
-  .who { display: flex; align-items: center; gap: 8px; font-size: 14px; }
-  .avatar { width: 36px; height: 36px; flex: none; image-rendering: pixelated; }
-  .avatar svg { width: 100%; height: 100%; display: block; }
-
-  /* パーティ */
-  .party { display: grid; gap: 10px; }
-  .member { display: grid; grid-template-columns: 40px 1fr auto; gap: 0 10px; align-items: center; }
-  .member .avatar { width: 40px; height: 40px; }
-  .member .n { font-size: 15px; }
-  .member .j { color: var(--sub); font-size: 12px; margin-left: 6px; }
-  .member .r { color: var(--sub); font-size: 12px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-  .member .st { font-size: 12px; text-align: right; white-space: nowrap; }
-  .member .st.busy { color: var(--gold); }
-  .member .st.free { color: var(--faint); }
-  .member.busy .avatar { animation: bob 1s steps(2) infinite; }
-  /* メンバーのいまの仕事（日程・次のアクション・直近のログ） */
-  .member { padding-bottom: 8px; border-bottom: 2px dashed #ffffff26; }
-  .member:last-child { padding-bottom: 0; border-bottom: 0; }
-  .work { grid-column: 2 / -1; list-style: none; margin: 4px 0 0; padding: 0; display: grid; gap: 2px; font-size: 12px; line-height: 1.5; min-width: 0; }
-  .work li { display: grid; grid-template-columns: 3.2em minmax(0, 1fr); gap: 0 4px; min-width: 0; }
-  .work .k { color: var(--sub); white-space: nowrap; }
-  .work .v { min-width: 0; overflow-wrap: anywhere; display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; line-clamp: 2; overflow: hidden; }
-  .work .v small { color: var(--faint); font-size: 11px; }
-  .work .w-task .v { color: var(--text); }
-  .work .w-task.doing .k { color: var(--gold); }
-  .work .w-task.late .v, .work .w-task.late .k { color: var(--low); }
-  .work .w-next .v { color: var(--text); }
-  .work .w-log .v { color: var(--sub); }
-  .work .idle { display: block; color: var(--faint); }
-
-  /* 冒険の記録 */
-  .rows { display: grid; gap: 6px; font-size: 14px; }
-  .rows .row { display: flex; justify-content: space-between; gap: 10px; }
-  .rows .row > span:first-child { color: var(--sub); white-space: nowrap; }
-  .rows .row > span:last-child { text-align: right; }
-  .status { padding: 6px 10px; border: 2px solid currentColor; border-radius: 6px; margin-bottom: 8px; }
-  .status.ok { color: var(--hp); } .status.warn { color: var(--low); } .status.idle { color: var(--sub); }
-
-  ul.list { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; font-size: 14px; }
-  ul.list li { padding-left: 20px; position: relative; overflow-wrap: anywhere; }
-  ul.list li::before { content: "◆"; position: absolute; left: 0; color: var(--gold); font-size: 11px; top: 3px; }
-  ul.list li .from { display: block; color: var(--sub); font-size: 12px; }
-  /* 回答欄：入力欄は1行まるごと、ボタンはその下に右寄せ。
-     入力欄の文字は 16px 以上（iPhone は 16px 未満の入力欄に触れると画面を拡大し、はみ出して見えるため） */
-  .ans { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 6px; margin-top: 6px; max-width: 100%; }
-  .ans input { flex: 1 1 100%; width: 100%; min-width: 0; box-sizing: border-box; font: inherit; font-size: 16px;
-    color: var(--text); background: #111; border: 2px solid var(--line); border-radius: 6px; padding: 6px 8px;
-    -webkit-appearance: none; appearance: none; }
-  .ans button { padding: 4px 18px; }
-  ul.list li { min-width: 0; }
-  .answered { color: var(--hp); font-size: 12px; margin-top: 4px; }
-  .apps li .st { display: inline-block; font-size: 12px; padding: 0 6px; margin-right: 6px; border: 1px solid currentColor; border-radius: 4px; }
-  .apps li .st.wait { color: var(--gold); } .apps li .st.todo { color: var(--sub); } .apps li .st.won { color: #6fdc8c; }
-  .apps li a { color: inherit; }
-  .apps .send { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 6px; }
-  .apps .send button, .apps .send a.btn { font: inherit; font-size: 12px; padding: 4px 10px; border-radius: 4px; border: 1px solid var(--gold); background: none; color: var(--gold); cursor: pointer; text-decoration: none; }
-  .apps .send .hint { width: 100%; font-size: 12px; color: var(--sub); }
-  .empty { color: var(--faint); font-size: 14px; padding: 10px 2px; }
-
-  /* メッセージウィンドウ */
-  .message {
-    position: fixed; left: 50%; bottom: 16px; transform: translateX(-50%);
-    width: min(1240px, calc(100% - 32px)); min-height: 96px; font-size: 17px; line-height: 1.8; z-index: 5;
-  }
-  .message .more { position: absolute; right: 16px; bottom: 6px; animation: blink 0.8s steps(2) infinite; }
-  .message p { margin: 0; white-space: pre-wrap; }
-
-  /* スマホ版の初期設定 */
-  .setup { position: fixed; inset: 0; background: #07071ce8; z-index: 10; display: none; place-items: center; padding: 16px; }
-  .setup.show { display: grid; }
-  .setup .win { width: min(520px, 100%); }
-  .setup h2 { font-size: 18px; font-weight: 400; margin: 6px 0 10px; }
-  .setup p { font-size: 13px; color: var(--sub); margin: 0 0 12px; }
-  .setup label { display: block; font-size: 13px; margin: 12px 0 4px; }
-  .setup input { width: 100%; font: inherit; font-size: 16px; color: var(--text); background: #111; border: 2px solid var(--line);
-    border-radius: 6px; padding: 8px 10px; }
-  .setup .err { color: var(--low); min-height: 1.6em; margin-top: 10px; font-size: 13px; }
-  .setup .actions { display: flex; justify-content: flex-end; gap: 10px; margin-top: 6px; }
-  @media (max-width: 560px) {
-    header.win { flex-wrap: wrap; gap: 10px; }
-    header h1 { font-size: 18px; }
-    header .spacer { flex-basis: 100%; height: 0; }
-    .message { font-size: 15px; min-height: 84px; bottom: max(12px, env(safe-area-inset-bottom)); }
-  }
+  /* ボタン */
+  .btn { font: inherit; font-size: 13px; font-weight: 700; height: 36px; padding: 0 16px; border-radius: 999px; border: 0; cursor: pointer;
+    display: inline-flex; align-items: center; justify-content: center; gap: 4px; white-space: nowrap; text-decoration: none; }
+  .btn:hover { text-decoration: none; }
+  .btn.pri { background: var(--accent); color: var(--on-accent); }
+  .btn.sec { background: var(--btn-2); color: var(--text); }
+  .btn.txt { background: none; color: var(--link); padding: 0 8px; }
+  .btn:disabled { opacity: .5; cursor: default; }
+  @media (max-width: 767px) { .btn { height: 44px; } .hdr .btn { height: 36px; } }
   #settings { display: none; }
-  body.gh #settings { display: inline-block; }
+  body.gh #settings { display: inline-flex; }
 
-  @keyframes blink { 50% { opacity: 0; } }
-  @keyframes bob { 50% { transform: translateY(-2px); } }
-  @media (prefers-reduced-motion: reduce) { * { animation: none !important; } }
+  /* 取得に失敗した帯 */
+  .banner { background: var(--red-b); color: var(--red-t); font-size: 15px; padding: 8px 40px; text-align: center; }
+  @media (max-width: 767px) { .banner { padding: 8px 16px; text-align: left; } }
+
+  /* 全体の並び */
+  .wrap { max-width: 1200px; margin: 0 auto; padding: 24px 40px 64px; }
+  @media (max-width: 767px) { .wrap { padding: 16px 16px 48px; } }
+  .grid { display: grid; grid-template-columns: repeat(12, minmax(0, 1fr)); gap: var(--gap); align-items: start; }
+  .c12 { grid-column: span 12; }
+  .c8 { grid-column: span 8; }
+  .c4 { grid-column: span 4; }
+  @media (max-width: 1099px) { .c8, .c4 { grid-column: span 12; } }
+  .stack { display: grid; gap: var(--gap); min-width: 0; }
+  .sep { margin-top: var(--sep); }
+  section { min-width: 0; scroll-margin-top: 72px; }
+  @media (max-width: 767px) { section { scroll-margin-top: 104px; } }
+  .sec-h { display: flex; align-items: baseline; gap: 8px; margin: 0 0 12px; min-width: 0; }
+  .sec-h h2 { font-size: 22px; line-height: 1.3; font-weight: 700; letter-spacing: 0.01em; }
+  .sec-h .cnt { font-size: 13px; color: var(--text-2); }
+  .sec-h .r { margin-left: auto; font-size: 13px; color: var(--text-2); text-align: right; }
+  @media (max-width: 767px) { .sec-h h2 { font-size: 20px; } }
+
+  /* カード */
+  .card { background: var(--card); border-radius: 18px; box-shadow: var(--shadow); border: var(--card-border); padding: var(--pad); min-width: 0; }
+  .card.list { padding: 0; overflow: hidden; }
+  .lrow { position: relative; display: block; padding: 16px var(--pad); color: inherit; min-width: 0; }
+  .lrow + .lrow::before { content: ""; position: absolute; top: 0; left: var(--pad); right: 0; border-top: 1px solid var(--line); }
+  a.lrow:hover { text-decoration: none; }
+  @media (hover: hover) {
+    .click:hover { background: var(--fill); transition: background .15s; cursor: pointer; }
+  }
+  .empty { color: var(--text-2); font-size: 15px; padding: 16px var(--pad); }
+  .card > .empty { padding: 0; }
+  .more-row { display: flex; justify-content: center; padding: 8px var(--pad) 16px; }
+
+  /* 札（チップ） */
+  .chip { display: inline-flex; align-items: center; height: 22px; padding: 0 8px; border-radius: 999px; font-size: 12px; font-weight: 700;
+    line-height: 1; white-space: nowrap; vertical-align: middle; flex: none; }
+  .chip.red { color: var(--red-t); background: var(--red-b); }
+  .chip.org { color: var(--org-t); background: var(--org-b); }
+  .chip.gry { color: var(--gry-t); background: var(--gry-b); }
+  .chip.pur { color: var(--pur-t); background: var(--pur-b); }
+  .chip.grn { color: var(--grn-t); background: var(--grn-b); }
+  .chip.cl { color: var(--cl-t); background: var(--cl-b); }
+  .chip.gp { color: var(--gp-t); background: var(--gp-b); }
+  .chip.stg { color: var(--text); background: var(--fill); }
+  .chip.none { color: var(--text-2); background: none; border: 1px dashed var(--line); }
+  .soon { color: var(--org-t); font-weight: 700; }
+
+  /* ドット絵の顔（丸い台の上に置く） */
+  .av { position: relative; display: inline-grid; place-items: center; border-radius: 50%; background: var(--fill);
+    box-shadow: inset 0 0 0 1px var(--ring); flex: none; vertical-align: middle; }
+  .av svg { display: block; image-rendering: pixelated; }
+  .av-s { width: 40px; height: 40px; }
+  .av-m { width: 64px; height: 64px; }
+  .av-l { width: 80px; height: 80px; }
+  .av .ini { font-size: 15px; font-weight: 700; color: var(--text-2); }
+  .av .dot { position: absolute; right: 0; bottom: 0; width: 12px; height: 12px; border-radius: 50%; background: var(--dot); box-shadow: 0 0 0 2px var(--card); }
+  .av-m .dot { right: 2px; bottom: 2px; }
+  .faces { display: inline-flex; }
+  .faces .av { box-shadow: inset 0 0 0 1px var(--ring), 0 0 0 2px var(--card); }
+  .faces .av + .av { margin-left: -8px; }
+  .av.plus { font-size: 13px; font-weight: 700; color: var(--text-2); }
+  .who { display: inline-flex; align-items: center; gap: 8px; min-width: 0; }
+  .who .lead-n { font-size: 13px; white-space: nowrap; }
+
+  /* まとめ */
+  .sum-top { display: flex; gap: 24px; align-items: center; }
+  .sum-lead { font-size: 22px; line-height: 1.5; font-weight: 700; }
+  .sum-sub { font-size: 15px; color: var(--text-2); margin-top: 4px; }
+  .sum-ok { font-size: 15px; color: var(--text-2); margin-top: 4px; }
+  .tiles { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: var(--gap); margin-top: 24px; }
+  .tile { display: block; background: var(--fill); border-radius: 12px; padding: 16px; color: var(--text); }
+  .tile:hover { text-decoration: none; }
+  .tile .k { font-size: 13px; color: var(--text-2); }
+  .tile .v { font-size: 34px; line-height: 1.1; font-weight: 700; font-variant-numeric: tabular-nums; }
+  .tile .v small { font-size: 15px; font-weight: 400; margin-left: 2px; color: var(--text); }
+  .tile.red .v { color: var(--red-t); } .tile.org .v { color: var(--org-t); } .tile.acc .v { color: var(--link); }
+  .av-sum-s { display: none; }
+  @media (max-width: 767px) {
+    .sum-top { gap: 16px; align-items: flex-start; }
+    .sum-lead { font-size: 19px; }
+    .tiles { grid-template-columns: repeat(2, minmax(0, 1fr)); margin-top: 16px; }
+    .tile .v { font-size: 28px; }
+    .av-sum-l { display: none; } .av-sum-s { display: inline-grid; }
+  }
+
+  /* 最近の動き */
+  .rrow { display: grid; grid-template-columns: 88px auto 96px minmax(0, 1fr); gap: 12px; align-items: center; padding-top: 8px; padding-bottom: 8px; }
+  .rrow .rt { display: grid; font-size: 15px; line-height: 1.3; }
+  .rrow .rt .sub { font-size: 13px; }
+  .rrow .rw { font-size: 13px; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .rrow .rx { font-size: 15px; }
+  @media (max-width: 767px) {
+    .rrow { grid-template-columns: auto minmax(0, 1fr); grid-template-areas: "av w" "av x" "av t"; gap: 0 12px; }
+    .rrow .av { grid-area: av; align-self: start; }
+    .rrow .rw { grid-area: w; } .rrow .rx { grid-area: x; white-space: normal; display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; }
+    .rrow .rt { grid-area: t; display: flex; gap: 8px; font-size: 13px; color: var(--text-2); }
+  }
+
+  /* 障害・遅れ */
+  .brow { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; gap: 4px 16px; align-items: start; width: 100%; }
+  .brow .bchips { display: flex; gap: 4px; padding-top: 2px; }
+  .brow .bname { font-size: 17px; font-weight: 700; line-height: 1.5; }
+  .brow .btext { font-size: 15px; }
+  .brow .bside { display: flex; align-items: center; gap: 8px; font-size: 13px; color: var(--text-2); white-space: nowrap; }
+  @media (max-width: 767px) {
+    .brow { grid-template-columns: minmax(0, 1fr); }
+    .brow .btext { font-size: 16px; }
+  }
+
+  /* オーナー確認事項 */
+  .ask .from { font-size: 13px; color: var(--text-2); }
+  .ask .q { font-size: 17px; line-height: 1.5; overflow-wrap: anywhere; margin-top: 2px; }
+  .ask.done .q { color: var(--text-2); }
+  .ans { display: flex; gap: 8px; margin-top: 8px; align-items: center; }
+  /* 入力欄の文字は 16px 以上（iPhone は 16px 未満の入力欄に触れると画面を拡大するため） */
+  .ans input, .inp { flex: 1 1 auto; min-width: 0; height: 40px; border: 0; border-radius: 10px; background: var(--fill); color: var(--text);
+    font: inherit; font-size: 16px; padding: 0 12px; -webkit-appearance: none; appearance: none; }
+  .ans .btn { min-width: 72px; }
+  .ask .st { margin-top: 8px; }
+  @media (max-width: 767px) {
+    .ans { flex-wrap: wrap; }
+    .ans input { flex: 1 1 100%; height: 44px; }
+    .ans .btn { flex: 1 1 calc(50% - 4px); height: 48px; }
+  }
+
+  /* 経営会議・受付 */
+  .mrow .mname { font-size: 15px; font-weight: 700; }
+  .mrow .mline { display: flex; align-items: center; gap: 8px; margin-top: 4px; flex-wrap: wrap; }
+  .mrow { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 0 12px; align-items: center; }
+  .intake .big { font-size: 28px; font-weight: 700; line-height: 1.1; font-variant-numeric: tabular-nums; }
+  .intake .big small { font-size: 15px; font-weight: 400; }
+  .intake .k { font-size: 13px; color: var(--text-2); }
+  .intake ul { list-style: none; padding: 0; margin: 8px 0 0; display: grid; gap: 4px; font-size: 15px; }
+  .intake hr { border: 0; border-top: 1px solid var(--line); margin: 16px 0; }
+
+  /* 案件 */
+  .pctl { display: flex; flex-wrap: wrap; gap: 8px 16px; align-items: center; margin: 0 0 12px; }
+  .seg { display: inline-flex; background: var(--fill); border-radius: 9px; padding: 2px; flex: none; }
+  .seg button { font: inherit; font-size: 13px; font-weight: 700; height: 28px; padding: 0 12px; border: 0; border-radius: 7px; background: none; color: var(--text); cursor: pointer; white-space: nowrap; }
+  .seg button.on { background: var(--card); box-shadow: var(--seg-shadow); }
+  .dchips { display: flex; gap: 8px; min-width: 0; flex: 1 1 auto; overflow-x: auto; scrollbar-width: none; }
+  .dchips::-webkit-scrollbar { display: none; }
+  .dchips button { font: inherit; font-size: 13px; font-weight: 700; height: 32px; padding: 0 12px; border-radius: 999px; border: 0; background: var(--fill); color: var(--text); cursor: pointer; white-space: nowrap; flex: none; }
+  .dchips button.on { background: var(--text); color: var(--card); }
+  .dchips select { font: inherit; font-size: 15px; height: 32px; border-radius: 10px; border: 0; background: var(--fill); color: var(--text); padding: 0 8px; }
+  .pctl-r { display: flex; gap: 16px; align-items: center; margin-left: auto; }
+  .pctl-r .inp { width: 240px; flex: none; }
+  .sw { display: inline-flex; align-items: center; gap: 8px; font-size: 13px; color: var(--text); cursor: pointer; white-space: nowrap; }
+  .sw input { position: absolute; opacity: 0; width: 1px; height: 1px; }
+  .sw .tr { width: 40px; height: 24px; border-radius: 999px; background: var(--btn-2); position: relative; transition: background .15s; flex: none; }
+  .sw .tr::after { content: ""; position: absolute; top: 2px; left: 2px; width: 20px; height: 20px; border-radius: 50%; background: #FFFFFF; box-shadow: 0 1px 3px rgba(0,0,0,.25); transition: transform .15s; }
+  .sw input:checked + .tr { background: var(--accent); }
+  .sw input:checked + .tr::after { transform: translateX(16px); }
+  .sw input:focus-visible + .tr { outline: 3px solid rgba(0,113,227,0.4); outline-offset: 2px; }
+  @media (max-width: 767px) {
+    .pctl-r { margin-left: 0; width: 100%; flex-wrap: wrap; gap: 8px; }
+    .pctl-r .inp { width: 100%; height: 44px; order: -1; }
+    .dchips { flex-basis: 100%; }
+  }
+
+  .prow { display: grid; grid-template-columns: minmax(0, 1fr) auto; grid-template-areas: "head due" "next who" "blk blk" "meta meta"; gap: 4px 16px; }
+  .p-head { grid-area: head; display: flex; flex-wrap: wrap; align-items: center; gap: 4px 8px; min-width: 0; }
+  .p-head .c-src { order: 0; }
+  .p-head .pname { order: 1; }
+  .p-head .chip:not(.c-src) { order: 2; }
+  .pname { font: inherit; font-size: 17px; font-weight: 700; line-height: 1.5; color: var(--text); background: none; border: 0; padding: 0; text-align: left; cursor: pointer; min-width: 0; overflow-wrap: anywhere; }
+  .p-due { grid-area: due; font-size: 13px; color: var(--text-2); white-space: nowrap; text-align: right; padding-top: 2px; }
+  .p-next { grid-area: next; font-size: 15px; min-width: 0; align-self: center; }
+  .p-next .lbl, .p-blk .lbl { font-size: 13px; color: var(--text-2); margin-right: 4px; }
+  .p-who { grid-area: who; justify-self: end; }
+  .p-blk { grid-area: blk; font-size: 15px; color: var(--red-t); }
+  .p-blk .lbl { color: var(--red-t); }
+  .p-meta { grid-area: meta; font-size: 13px; color: var(--text-2); display: flex; flex-wrap: wrap; align-items: center; gap: 4px 0; }
+  .p-meta > span { display: inline-flex; align-items: center; gap: 4px; }
+  .p-meta > span + span::before { content: "・"; margin: 0 8px; color: var(--text-2); }
+  .pbar { display: inline-block; width: 64px; height: 4px; border-radius: 2px; background: var(--line); overflow: hidden; margin-left: 4px; }
+  .pbar i { display: block; height: 100%; background: var(--text-2); }
+  .p-exp { grid-column: 1 / -1; }
+  @media (max-width: 767px) {
+    .prow { grid-template-columns: minmax(0, 1fr) auto; grid-template-areas: "head head" "next next" "blk blk" "who due" "meta meta"; }
+    .p-head .pname { order: 3; flex-basis: 100%; display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; overflow: hidden; }
+    .p-next { font-size: 16px; }
+    .p-next .clamp1 { white-space: normal; display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; }
+    .p-blk { font-size: 16px; }
+    .p-who { justify-self: start; }
+    .p-due { align-self: center; }
+  }
+  .exp { background: var(--fill); border-radius: 12px; padding: 16px; margin-top: 8px; display: grid; gap: 16px; cursor: auto; }
+  .exp h4 { font-size: 13px; font-weight: 700; color: var(--text-2); margin-bottom: 4px; }
+  .exp p { font-size: 15px; overflow-wrap: anywhere; }
+  .exp ul { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; }
+  .sched li { display: grid; grid-template-columns: 48px minmax(0, 1fr) auto; gap: 8px; align-items: baseline; font-size: 15px; }
+  .sched .dt { font-size: 13px; color: var(--text-2); font-variant-numeric: tabular-nums; }
+  .sched .tk { overflow-wrap: anywhere; }
+  .sched .tk small { font-size: 13px; color: var(--text-2); margin-left: 8px; }
+  .sched .st { display: inline-flex; gap: 4px; }
+  .logs li { font-size: 15px; overflow-wrap: anywhere; }
+  .logs .dt { font-size: 13px; color: var(--text-2); margin-right: 8px; font-variant-numeric: tabular-nums; }
+  .logs b { font-weight: 700; margin-right: 8px; }
+  .exp .links { display: flex; flex-wrap: wrap; gap: 16px; font-size: 15px; }
+  .done-d > summary { list-style: none; cursor: pointer; padding: 16px var(--pad); font-size: 15px; color: var(--text-2); border-top: 1px solid var(--line); }
+  .done-d > summary::-webkit-details-marker { display: none; }
+  .done-d > summary::after { content: "›"; display: inline-block; margin-left: 8px; transition: transform .15s; }
+  .done-d[open] > summary::after { transform: rotate(90deg); }
+  .drow { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; font-size: 15px; }
+  .drow .dn { font-weight: 700; min-width: 0; }
+
+  /* 朝の報告・稼働状況 */
+  .mr-lead { font-size: 17px; font-weight: 700; line-height: 1.5; }
+  .mr-cols { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: var(--gap); margin-top: 16px; }
+  .mr-cols h3 { font-size: 13px; font-weight: 700; color: var(--text-2); margin: 0 0 4px; }
+  .mr-cols h3 + ul + h3, .mr-cols ul + h3 { margin-top: 16px; }
+  .bul { list-style: none; margin: 0; padding: 0; display: grid; gap: 4px; font-size: 15px; }
+  .bul li { padding-left: 16px; position: relative; overflow-wrap: anywhere; }
+  .bul li::before { content: "•"; position: absolute; left: 0; color: var(--text-2); }
+  .mr-more { display: none; margin-top: 8px; }
+  @media (max-width: 767px) {
+    .mr-cols { grid-template-columns: minmax(0, 1fr); }
+    .morning:not(.open) .mr-x { display: none; }
+    .mr-more { display: inline-flex; }
+    .mr-cols .mr-risk { order: -1; }
+  }
+  .ops-st { display: flex; align-items: center; gap: 8px; font-size: 15px; font-weight: 700; margin-bottom: 8px; }
+  .ops-st i { width: 10px; height: 10px; border-radius: 50%; background: var(--dot-off); flex: none; }
+  .ops-st.ok i { background: var(--dot); } .ops-st.warn i { background: var(--org-t); }
+  .kv { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 8px 16px; align-items: center; }
+  .kv dt { font-size: 13px; color: var(--text-2); white-space: nowrap; }
+  .kv dd { margin: 0; font-size: 15px; text-align: right; overflow-wrap: anywhere; font-variant-numeric: tabular-nums; }
+
+  /* チーム */
+  .team { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 16px; }
+  .mem { min-width: 0; }
+  .mem-h { display: flex; align-items: center; gap: 12px; min-width: 0; }
+  .mem-h .nm { min-width: 0; flex: 1; }
+  .mem-h .nm b { display: block; font-size: 15px; font-weight: 700; }
+  .mem-h .nm span { display: block; font-size: 13px; color: var(--text-2); }
+  .work { list-style: none; margin: 8px 0 0; padding: 0; display: grid; gap: 4px; font-size: 13px; }
+  .work li { display: grid; grid-template-columns: 32px minmax(0, 1fr); gap: 8px; align-items: center; min-width: 0; }
+  .work .k { font-weight: 700; color: var(--text-2); }
+  .work .v { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; min-width: 0; }
+  @media (max-width: 1099px) { .team { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+  @media (max-width: 767px) {
+    .team { grid-template-columns: minmax(0, 1fr); gap: 0; }
+    .team .mem { padding: 16px 0; border-top: 1px solid var(--line); }
+    .team .mem:first-child { border-top: 0; padding-top: 0; }
+  }
+
+  /* 組織図 */
+  .orgs { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--gap); }
+  .org-h { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin-bottom: 16px; }
+  .org-h .on { font-size: 17px; font-weight: 700; }
+  .org-h .ceo { margin-left: auto; display: inline-flex; align-items: center; gap: 8px; font-size: 13px; color: var(--text-2); }
+  .unit { background: var(--fill); border-radius: 12px; padding: 16px; }
+  .unit + .unit { margin-top: 12px; }
+  .unit-h { display: flex; align-items: baseline; gap: 8px; margin-bottom: 8px; }
+  .unit-h b { font-size: 15px; }
+  .unit-h span { font-size: 13px; color: var(--text-2); }
+  .umem { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; gap: 12px; align-items: center; padding: 4px 0; }
+  .umem .n { font-size: 15px; }
+  .umem .r { font-size: 13px; color: var(--text-2); }
+  .org-seg { display: none; margin-bottom: 12px; }
+  @media (max-width: 1099px) { .orgs { grid-template-columns: minmax(0, 1fr); } }
+  @media (max-width: 767px) {
+    .org-seg { display: inline-flex; }
+    .orgcol:not(.sel) { display: none; }
+  }
+
+  /* 応募一覧 */
+  .apps-d > summary { list-style: none; cursor: pointer; display: flex; align-items: center; gap: 8px; padding: 16px var(--pad); font-size: 15px; }
+  .apps-d > summary::-webkit-details-marker { display: none; }
+  .apps-d > summary .tg { margin-left: auto; color: var(--link); font-size: 13px; }
+  .apps-d[open] > summary { border-bottom: 1px solid var(--line); }
+  .app .from { font-size: 13px; color: var(--text-2); }
+  .app .an { font-size: 17px; font-weight: 700; display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin-top: 2px; }
+  .app .an a { color: var(--text); }
+  .send { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 8px; align-items: center; }
+  .send .hint { width: 100%; font-size: 13px; color: var(--text-2); }
+
+  /* 知らせ（下に少しだけ出る） */
+  .toast { position: fixed; left: 50%; bottom: max(24px, env(safe-area-inset-bottom)); transform: translateX(-50%); z-index: 40;
+    max-width: min(560px, calc(100% - 32px)); background: var(--text); color: var(--card); border-radius: 12px; padding: 12px 16px;
+    font-size: 15px; white-space: pre-line; box-shadow: 0 4px 16px rgba(0,0,0,.2); opacity: 0; pointer-events: none; transition: opacity .2s; }
+  .toast.show { opacity: 1; }
+
+  /* スマホ版の初期設定（背景には何も描かない） */
+  .setup { position: fixed; inset: 0; background: var(--bg); z-index: 50; display: none; place-items: center; padding: 16px; overflow-y: auto; }
+  .setup.show { display: grid; }
+  .setup .card { width: min(520px, 100%); }
+  .setup h2 { font-size: 22px; font-weight: 700; margin-bottom: 8px; }
+  .setup p { font-size: 15px; color: var(--text-2); }
+  .setup label { display: block; font-size: 13px; font-weight: 700; margin: 16px 0 4px; }
+  .setup .inp { width: 100%; height: 44px; }
+  .setup .err { color: var(--red-t); min-height: 1.6em; margin-top: 8px; font-size: 13px; }
+  .setup .actions { display: flex; justify-content: flex-end; gap: 8px; margin-top: 8px; }
+
+  @media (prefers-reduced-motion: reduce) { *, *::before, *::after { transition: none !important; animation: none !important; } }
 </style>
 </head>
 <body>
-<div class="wrap">
-  <header class="win">
-    <span class="avatar" id="h-avatar"></span>
-    <div>
-      <h1 id="company">社名未定</h1>
-      <div class="sub">CEO オウセン ／ 最終更新 <span id="updated">—</span></div>
-    </div>
-    <div class="spacer"></div>
-    <button id="settings" title="スマホ版の設定">⚙</button>
-    <button id="refresh" title="GitHub から最新を取得">▶ 最新を取得</button>
-  </header>
-
-  <section class="win morning" id="morning" hidden>
-    <span class="tab" id="morning-tab">朝の報告</span>
-    <div id="morning-body"></div>
-  </section>
-
-  <div class="grid">
-    <div class="col">
-      <section class="win">
-        <span class="tab">ステータス</span>
-        <div class="stats">
-          <div class="stat"><div class="label">進行中の案件</div><div class="value" id="k-active">–</div></div>
-          <div class="stat"><div class="label">未着手の案件</div><div class="value" id="k-inbox">–</div></div>
-          <div class="stat" id="kpi-due"><div class="label">7日以内の納期</div><div class="value" id="k-due">–</div></div>
-          <div class="stat"><div class="label">応募の返事待ち</div><div class="value" id="k-apps">–</div></div>
-          <div class="stat" id="kpi-ask"><div class="label">オーナー確認待ち</div><div class="value" id="k-ask">–</div></div>
-        </div>
-      </section>
-
-<section class="win">
-        <span class="tab">応募一覧</span>
-        <div id="apps"></div>
-      </section>
-
-      <section class="win">
-        <span class="tab">案件一覧</span>
-        <div class="qfilter" id="qfilter"></div>
-        <div class="quests" id="projects"></div>
-      </section>
-    </div>
-
-    <aside class="col">
-      <section class="win">
-        <span class="tab">チーム</span>
-        <div class="party" id="team"></div>
-      </section>
-      <section class="win">
-        <span class="tab">稼働状況</span>
-        <div class="rows" id="ops"></div>
-      </section>
-      <section class="win">
-        <span class="tab">オーナー確認事項</span>
-        <div id="asks"></div>
-      </section>
-      <section class="win">
-        <span class="tab">未着手の案件</span>
-        <div id="inbox"></div>
-      </section>
-    </aside>
+<header class="hdr">
+  <div class="hdr-in">
+    <h1 id="company">TENKA LAB</h1>
+    <nav class="hnav" id="hnav" aria-label="欄へ移動"></nav>
+    <span class="hsp"></span>
+    <span class="htime" id="updated"></span>
+    <button class="btn sec" id="refresh" type="button" title="GitHub から最新を取得">更新</button>
+    <button class="btn txt" id="settings" type="button" title="スマホ版の設定">設定</button>
   </div>
-</div>
+  <nav class="cnav" id="cnav" aria-label="欄へ移動"></nav>
+</header>
+<div class="banner" id="syncerr" role="alert" hidden>GitHub から取得できませんでした。最後に取れた内容を表示しています</div>
 
-<div class="win message" id="message" aria-live="polite"><p id="msg"></p><span class="more">▼</span></div>
+<main class="wrap" id="app" hidden>
+  <div class="grid">
+    <section class="c12" id="sec-summary" aria-label="まとめ"><div class="card" id="summary"></div></section>
+
+    <section class="c12" id="sec-recent">
+      <div class="sec-h"><h2>最近の動き</h2><span class="cnt" id="recent-n"></span></div>
+      <div class="card list" id="recent"></div>
+    </section>
+
+    <section class="c12" id="sec-blockers" hidden>
+      <div class="sec-h"><h2>障害・遅れ</h2><span class="cnt" id="blk-n"></span></div>
+      <div class="card list" id="blockers"></div>
+    </section>
+
+    <section class="c8" id="sec-asks">
+      <div class="sec-h"><h2>オーナー確認事項</h2><span class="cnt" id="ask-n"></span></div>
+      <div class="card list" id="asks"></div>
+    </section>
+    <div class="c4 stack">
+      <section id="sec-meet">
+        <div class="sec-h"><h2>経営会議</h2><span class="cnt" id="meet-n"></span></div>
+        <div class="card list" id="meetings"></div>
+      </section>
+      <section id="sec-intake">
+        <div class="sec-h"><h2>受付</h2></div>
+        <div class="card intake" id="intake"></div>
+      </section>
+    </div>
+
+    <section class="c12 sep" id="sec-projects">
+      <div class="sec-h"><h2>案件</h2><span class="cnt" id="proj-n"></span></div>
+      <div class="pctl">
+        <div class="seg" id="p-seg" role="group" aria-label="区分"></div>
+        <div class="dchips" id="p-depts" role="group" aria-label="事業部"></div>
+        <div class="pctl-r">
+          <label class="sw"><input type="checkbox" id="p-need"><span class="tr" aria-hidden="true"></span><span>要対応だけ <span id="p-need-n" class="tnum"></span></span></label>
+          <label class="vh" for="p-q">案件を検索</label>
+          <input class="inp" id="p-q" type="search" placeholder="案件名・クライアント・責任者" autocomplete="off">
+        </div>
+      </div>
+      <div class="card list" id="projects"></div>
+    </section>
+
+    <section class="c8" id="sec-morning" hidden>
+      <div class="sec-h"><h2>朝の報告</h2><span class="cnt" id="mr-date"></span></div>
+      <div class="card morning" id="morning"></div>
+    </section>
+    <section class="c4" id="sec-ops">
+      <div class="sec-h"><h2>稼働状況</h2></div>
+      <div class="card" id="ops"></div>
+    </section>
+
+    <section class="c12 sep" id="sec-team">
+      <div class="sec-h"><h2>チーム</h2><span class="cnt" id="team-n"></span></div>
+      <div class="card" id="team"></div>
+    </section>
+
+    <section class="c12" id="sec-org" hidden>
+      <div class="sec-h"><h2>組織図</h2><span class="r" id="org-upd"></span></div>
+      <div class="card" id="org"></div>
+    </section>
+
+    <section class="c12 sep" id="sec-apps">
+      <div class="sec-h"><h2>応募一覧</h2></div>
+      <div class="card list">
+        <details class="apps-d" id="apps-d">
+          <summary><span id="apps-sum"></span><span class="tg" aria-hidden="true">開く</span></summary>
+          <div id="apps"></div>
+        </details>
+      </div>
+    </section>
+  </div>
+</main>
+
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
 
 <div class="setup" id="setup">
-  <form class="win" id="setup-form" autocomplete="off">
-    <span class="tab">はじめの設定</span>
+  <form class="card" id="setup-form" autocomplete="off">
     <h2>スマホで会社のようすを見る</h2>
     <p>案件データは非公開の GitHub リポジトリから直接読み込みます。入力した内容は、このスマホのブラウザの中にだけ保存されます。</p>
     <label for="f-repo">リポジトリ（ユーザー名/リポジトリ名）</label>
-    <input id="f-repo" placeholder="username/ai-company" autocapitalize="off" spellcheck="false">
+    <input class="inp" id="f-repo" placeholder="username/repository" autocapitalize="off" spellcheck="false">
     <label for="f-token">GitHub トークン（読み取り専用）</label>
-    <input id="f-token" type="password" placeholder="github_pat_..." autocapitalize="off" spellcheck="false">
+    <input class="inp" id="f-token" type="password" placeholder="github_pat_..." autocapitalize="off" spellcheck="false">
     <div class="err" id="f-err"></div>
     <div class="actions">
-      <button type="button" id="f-forget">設定を消す</button>
-      <button type="submit">▶ はじめる</button>
+      <button class="btn sec" type="button" id="f-forget">設定を消す</button>
+      <button class="btn pri" type="submit">はじめる</button>
     </div>
   </form>
 </div>
@@ -307,310 +520,564 @@
 <script src="sprites.js"></script>
 <script src="parse.js"></script>
 <script>
-const STAGE_COLOR = { '要件定義': '--s-req', '着手前': '--s-req', '制作中': '--s-make', 'テスト': '--s-test', 'レビュー待ち': '--s-wait', '納品待ち': '--s-wait', '止まっている': '--low', '納品済み': '--s-done', '中止': '--s-stop' };
-// 案件一覧の絞り込み（すべて / Claude / GPT / 事業部）。端末に覚えておく
-let questFilter = localStorage.getItem('questFilter') || 'すべて';
 const $ = (id) => document.getElementById(id);
 const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
-const face = (name) => Sprites.svg(Sprites.who(name) || name, 32);
+const store = {
+  get: (k) => { try { return localStorage.getItem(k); } catch { return null; } },
+  set: (k, v) => { try { localStorage.setItem(k, v); } catch {} },
+  del: (k) => { try { localStorage.removeItem(k); } catch {} },
+};
+const LOCAL = ['localhost', '127.0.0.1'].includes(location.hostname);
+const DONE = new Set(['納品済み', '中止', '完了']);
 
-function fmtTime(iso) {
-  if (!iso) return '—';
-  return new Date(iso).toLocaleString('ja-JP', { month: 'numeric', day: 'numeric', hour: '2-digit', minute: '2-digit' });
+// ---- 時刻（日本時間） ----
+const pad = (n) => String(n).padStart(2, '0');
+const jst = (t) => { const x = new Date(t + 9 * 3600e3); return { y: x.getUTCFullYear(), mo: x.getUTCMonth() + 1, d: x.getUTCDate(), h: x.getUTCHours(), mi: x.getUTCMinutes() }; };
+const todayJst = () => { const p = jst(Date.now()); return `${p.y}-${pad(p.mo)}-${pad(p.d)}`; };
+function dateOf(s) { const m = String(s || '').match(/(\d{4})-(\d{1,2})-(\d{1,2})/); return m ? Date.UTC(+m[1], m[2] - 1, +m[3]) : null; }
+function daysLeft(s) { const d = dateOf(s); return d === null ? null : Math.round((d - dateOf(todayJst())) / 864e5); }
+// ISO 時刻 → 「M/D HH:MM」（7日以上前は「M/D」）
+function fmtAt(iso) {
+  const t = Date.parse(iso); if (isNaN(t)) return '';
+  const p = jst(t);
+  return Date.now() - t >= 7 * 864e5 ? `${p.mo}/${p.d}` : `${p.mo}/${p.d} ${pad(p.h)}:${pad(p.mi)}`;
 }
+const hm = (iso) => { const t = Date.parse(iso); if (isNaN(t)) return ''; const p = jst(t); return `${pad(p.h)}:${pad(p.mi)}`; };
+// カードに人が書いた日付（YYYY-MM-DD または YYYY-MM-DD HH:MM）→「M/D」「M/D HH:MM」
+function fmtDay(s) { const m = String(s || '').match(/\d{4}-(\d{1,2})-(\d{1,2})(?:[ T](\d{1,2}):(\d{2}))?/); return m ? `${+m[1]}/${+m[2]}${m[3] ? ` ${pad(m[3])}:${m[4]}` : ''}` : String(s || ''); }
 function ago(iso) {
-  const m = Math.round((Date.now() - new Date(iso)) / 60000);
+  const m = Math.round((Date.now() - Date.parse(iso)) / 60000);
+  if (isNaN(m)) return '';
   if (m < 1) return 'たった今';
   if (m < 60) return `${m}分前`;
   const h = Math.round(m / 60);
   return h < 48 ? `${h}時間前` : `${Math.round(h / 24)}日前`;
 }
 function until(iso) {
-  const m = Math.max(0, Math.round((new Date(iso) - Date.now()) / 60000));
+  const m = Math.max(0, Math.round((Date.parse(iso) - Date.now()) / 60000));
   return m < 60 ? `あと${m}分` : `あと${Math.floor(m / 60)}時間${m % 60 ? (m % 60) + '分' : ''}`;
 }
-function daysLeft(due) {
-  const m = String(due || '').match(/(\d{4})-(\d{1,2})-(\d{1,2})/);
-  if (!m) return null;
-  const today = new Date(); today.setHours(0, 0, 0, 0);
-  return Math.round((new Date(+m[1], m[2] - 1, +m[3]) - today) / 86400000);
+const cut = (t, n) => { t = String(t || '').trim(); return t.length > n ? t.slice(0, n) + '…' : t; };
+const shortName = (n) => String(n || '').replace(/\s*[（(].*[）)]\s*$/, '');
+
+// ---- 札・顔 ----
+const chip = (cls, text) => `<span class="chip ${cls}">${esc(text)}</span>`;
+const NONE = chip('none', '未記入');
+const NOGET = chip('none', '未取得');
+const faceCache = new Map(); // 名前と大きさごとに1回だけ作る（100件でも重くしない）
+const PX = { s: 32, m: 48, l: 64 };
+const whoName = (n) => Sprites.who(n) || String(n || '').replace(/[（(].*$/, '').trim();
+function av(name, size = 's', opt = {}) {
+  const id = Sprites.who(name);
+  const label = opt.label || whoName(name) || '未登録';
+  let inner;
+  if (id) {
+    const key = id + '|' + PX[size];
+    if (!faceCache.has(key)) faceCache.set(key, Sprites.svg(id, PX[size]).replace('<svg ', '<svg aria-hidden="true" focusable="false" '));
+    inner = faceCache.get(key);
+  } else inner = `<span class="ini" aria-hidden="true">${esc(label.charAt(0) || '?')}</span>`;
+  return `<span class="av av-${size}${opt.cls ? ' ' + opt.cls : ''}" role="img" aria-label="${esc(label)}" title="${esc(label)}">${inner}${opt.busy ? '<i class="dot"></i>' : ''}</span>`;
 }
-function dueLabel(due, label = '納期') {
-  const d = daysLeft(due);
-  if (d === null) return `<span class="due">${label} ${due ? esc(due) : '未定'}</span>`;
-  const cls = d < 0 ? 'over' : d <= 3 ? 'soon' : '';
-  const txt = d < 0 ? `${-d}日超過` : d === 0 ? '本日まで' : `あと${d}日`;
-  return `<span class="due ${cls}">${label} ${esc(due)}（${txt}）</span>`;
+let busySet = new Set();
+
+// 案件の責任者（先頭・名前つき）と担当（顔だけ）
+function people(p) {
+  const out = []; const seen = new Set();
+  const add = (n) => { const id = whoName(n); if (id && !seen.has(id)) { seen.add(id); out.push(id); } };
+  if (p.lead) add(p.lead);
+  String(p.owner || '').split(/[・、,，/／&＆+＋\s]+/).filter(Boolean).forEach(add);
+  return out;
 }
-// 日程の表示（完了 ✓・進行中 ▶・未着手 ・。予定日を過ぎて未完了なら赤）
-const closedSchedules = new Set(); // 閉じた日程（最初は開いて表示。閉じたら再描画しても閉じたまま）
-function scheduleHtml(rows) {
+function facesHtml(p) {
+  const ns = people(p);
+  const lead = p.lead ? ns[0] : null;
+  const rest = lead ? ns.slice(1) : ns;
+  let h = lead
+    ? `<span class="who">${av(lead, 's', { busy: busySet.has(lead) })}<span class="lead-n">${esc(lead)}</span></span>`
+    : `<span class="who"><span class="sub">責任者</span>${NONE}</span>`;
+  if (rest.length) {
+    const show = rest.length > 4 ? rest.slice(0, 3) : rest;
+    h += `<span class="faces">${show.map((n) => av(n, 's', { busy: busySet.has(n) })).join('')}${rest.length > 4 ? `<span class="av av-s plus" title="${esc(rest.slice(3).join('、'))}">+${rest.length - 3}</span>` : ''}</span>`;
+  }
+  return `<span class="who">${h}</span>`;
+}
+
+// ---- 案件の状態（障害・遅れ・古い・未同期）。推測はしない：書かれた項目と日付だけで決める ----
+const infoCache = new Map();
+function info(p) {
+  if (infoCache.has(p)) return infoCache.get(p);
+  const done = DONE.has(p.stage);
+  const dl = p.internalDue ? ['社内締切', p.internalDue] : p.due ? ['納期', p.due] : null;
+  const left = dl ? daysLeft(dl[1]) : null;
+  const over = !done && left !== null && left < 0 ? -left : 0;
+  const late = !done && (!!p.risk || over > 0);
+  const blocked = !done && !!p.blocker;
+  const upd = p.updated ? daysLeft(p.updated) : null;
+  const age = upd === null ? null : -upd;
+  const stale = !done && age !== null && age > (p.staleDays || 3) ? age : null;
+  let unsynced = null;
+  if (p.source === 'GPT' && !done && lastState && lastState.ops && lastState.ops.gptSync) {
+    // 未同期は PC のサーバーが覚えている最後の取り込み時刻で判断する（スマホ版では判断しない）
+    const t = Date.parse(lastState.ops.gptSync);
+    if (isNaN(t)) unsynced = -1;
+    else if (Date.now() - t > 3600e3) unsynced = Math.floor((Date.now() - t) / 3600e3);
+  }
+  const r = { done, dl, left, over, late, blocked, age, stale, unsynced, need: blocked || late || stale !== null || unsynced !== null };
+  infoCache.set(p, r);
+  return r;
+}
+const deptName = (d) => (!d ? '' : /(事業部|部)$/.test(d) ? d : d + '事業部');
+function stateChips(p, i) {
+  let h = '';
+  if (i.blocked) h += chip('red', '障害');
+  if (i.late && !i.over) h += chip('org', '遅れ');
+  if (i.stale !== null) h += chip('gry', `古い・${i.stale}日前`);
+  if (i.unsynced !== null) h += chip('pur', i.unsynced < 0 ? '未同期' : `未同期・${i.unsynced}時間前`);
+  return h;
+}
+function stageChip(p) { return p.stage === '止まっている' ? chip('red', p.stage) : chip('stg', p.stage); }
+function srcChip(p) { return p.source === 'GPT' ? '<span class="chip gp c-src">GPT</span>' : '<span class="chip cl c-src">Claude</span>'; }
+function dueHtml(i) {
+  if (!i.dl) return `<span class="sub">期限</span> ${NONE}`;
+  const [label, v] = i.dl;
+  if (i.left === null) return `${esc(label)} ${esc(cut(v, 16))}`;
+  const day = `${esc(label)} <span class="tnum">${esc(fmtDay(v))}</span>`;
+  if (i.done) return day;
+  if (i.over) return `${day} ${chip('org', `${i.over}日超過`)}`;
+  if (i.left === 0) return `${day} <span class="soon">本日まで</span>`;
+  return i.left <= 3 ? `${day} <span class="soon">あと${i.left}日</span>` : `${day} あと${i.left}日`;
+}
+function sortActive(list) {
+  const rank = (p) => { const i = info(p); return i.blocked ? 0 : i.late ? 1 : i.left !== null ? 2 : 3; };
+  return list.slice().sort((a, b) => {
+    const ra = rank(a), rb = rank(b);
+    if (ra !== rb) return ra - rb;
+    const ia = info(a), ib = info(b);
+    if (ra <= 1 && ib.over !== ia.over) return ib.over - ia.over;
+    if (ra <= 2 && ia.left !== ib.left) return (ia.left ?? 1e9) - (ib.left ?? 1e9);
+    return String(b.updated).localeCompare(String(a.updated)) || a.name.localeCompare(b.name, 'ja');
+  });
+}
+
+// ---- 案件の展開部（障害・遅れの欄と案件の欄で同じものを使う） ----
+const repoName = () => store.get('gh_repo') || (lastState && lastState.repo) || '';
+function cardUrl(p) {
+  if (p.source === 'GPT') return p.url;
+  const r = repoName();
+  return r ? `https://github.com/${r}/blob/main/${p.path.split('/').map(encodeURIComponent).join('/')}` : '';
+}
+function schedHtml(rows) {
   if (!rows || !rows.length) return '';
-  const doneCount = rows.filter((r) => /完了/.test(r.state)).length;
-  const items = rows.map((r) => {
+  return `<div><h4>日程</h4><ul class="sched">${rows.map((r) => {
     const done = /完了/.test(r.state);
     const doing = !done && /進行|作業中|制作中/.test(r.state);
     const d = daysLeft(r.date);
     const late = !done && d !== null && d < 0;
-    const cls = done ? 'done' : late ? 'late' : doing ? 'doing' : '';
-    const mk = done ? '✓' : doing ? '▶' : '・';
-    const m = r.date.match(/\d{4}-(\d{2})-(\d{2})(.*)/);
-    const date = m ? `${+m[1]}/${+m[2]}` : r.date;
-    const tag = /社内締切/.test(m ? m[3] : '') ? ' <small>社内締切</small>' : '';
-    return `<li class="${cls}"><span class="mk">${mk}</span><span class="dt">${esc(date)}${late ? ' 遅れ' : ''}</span>
-      <span class="tk">${esc(r.task)}${tag}${r.who ? `<small>${esc(r.who)}</small>` : ''}</span></li>`;
-  }).join('');
-  const key = rows.map((r) => r.date + r.task).join('|');
-  return `<details class="sched" data-key="${esc(key)}" ${closedSchedules.has(key) ? "" : "open"}>
-    <summary>日程（${doneCount}/${rows.length} 完了）</summary><ol>${items}</ol></details>`;
+    const st = done ? chip('grn', '完了') : doing ? chip('stg', '作業中') : chip('gry', '未着手');
+    const tag = /社内締切/.test(r.date) ? '（社内締切）' : '';
+    return `<li><span class="dt">${esc(fmtDay(r.date))}</span><span class="tk">${esc(r.task)}${tag}${r.who ? `<small>${esc(r.who)}</small>` : ''}</span><span class="st">${late ? chip('org', '遅れ') : ''}${st}</span></li>`;
+  }).join('')}</ul></div>`;
 }
-document.addEventListener('toggle', (ev) => {
-  const el = ev.target;
-  if (el.classList && el.classList.contains('sched')) {
-    if (el.open) closedSchedules.delete(el.dataset.key); else closedSchedules.add(el.dataset.key);
-  }
-}, true);
-
-// メンバーのいまの仕事（いま＝日程のいちばん近い作業 ／ 次＝担当案件の次のアクション ／ 記録＝直近のログ）
-const md = (d) => { const m = String(d || '').match(/\d{4}-(\d{2})-(\d{2})/); return m ? `${+m[1]}/${+m[2]}` : String(d || ''); };
-const cut = (t, n) => { t = String(t || '').trim(); return t.length > n ? t.slice(0, n) + '…' : t; };
-const shortName = (n) => String(n || '').replace(/\s*[（(].*[）)]\s*$/, ''); // 案件名の（…）を省く
-function workHtml(m) {
-  const items = [];
-  if (m.task) {
-    const t = m.task;
-    const d = daysLeft(t.date);
-    const late = d !== null && d < 0;
-    const doing = /進行|作業中|制作中/.test(t.state);
-    items.push(`<li class="w-task ${late ? 'late' : doing ? 'doing' : ''}"><span class="k">${doing ? '▶' : ''}いま</span>
-      <span class="v">${esc(md(t.date))}${late ? ' 遅れ' : ''}${t.deadline ? '（社内締切）' : ''} ${esc(cut(t.task, 40))} <small>${esc(shortName(t.project))}</small></span></li>`);
-  }
-  if (m.next) items.push(`<li class="w-next"><span class="k">次 ▷</span><span class="v">${esc(cut(m.next.text, 40))}</span></li>`);
-  if (m.log) {
-    const first = m.log.text.split('。')[0];
-    items.push(`<li class="w-log"><span class="k">記録</span><span class="v">${esc(md(m.log.date))} ${esc(m.id)}：${esc(cut(first, 48))}</span></li>`);
-  }
-  if (!m.task && !m.next && !m.log && !m.count) return '<div class="work"><span class="idle">待機中</span></div>';
-  return items.length ? `<ul class="work">${items.join('')}</ul>` : '';
+function expHtml(p) {
+  const parts = [];
+  if (p.blocker) parts.push(`<div><h4>障害</h4><p>${esc(p.blocker)}</p></div>`);
+  if (p.risk) parts.push(`<div><h4>遅れの理由</h4><p>${esc(p.risk)}</p></div>`);
+  if (p.next) parts.push(`<div><h4>次の行動</h4><p>${esc(p.next)}</p></div>`);
+  if (p.working) parts.push(`<div><h4>作業中</h4><p>${esc(p.working)}</p></div>`);
+  parts.push(schedHtml(p.schedule));
+  const logs = (p.log || []).map((l, i) => ({ ...l, i })).sort((a, b) => b.date.localeCompare(a.date) || b.i - a.i).slice(0, 3);
+  if (logs.length) parts.push(`<div><h4>最新のログ</h4><ul class="logs">${logs.map((l) => `<li><span class="dt">${esc(fmtDay(l.date))}</span><b>${esc(l.who)}</b>${esc(l.text)}</li>`).join('')}</ul></div>`);
+  const meta = [p.client, p.kind, p.amount, p.priority ? `優先度 ${p.priority}` : ''].filter(Boolean);
+  if (meta.length) parts.push(`<p class="sub">${meta.map(esc).join(' ・ ')}</p>`);
+  const links = [];
+  const cu = cardUrl(p);
+  if (cu) links.push(`<a href="${esc(cu)}" target="_blank" rel="noopener">${p.source === 'GPT' ? 'Issue を開く' : 'カードを開く'} ↗</a>`);
+  if (p.url && p.source !== 'GPT') links.push(`<a href="${esc(p.url)}" target="_blank" rel="noopener">URL ↗</a>`);
+  if (links.length) parts.push(`<div class="links">${links.join('')}</div>`);
+  return `<div class="exp">${parts.filter(Boolean).join('')}</div>`;
+}
+function metaHtml(p) {
+  const m = [];
+  if (p.deliverable) m.push(`<span><a href="${esc(p.deliverable)}" target="_blank" rel="noopener">成果物 ↗</a></span>`);
+  m.push(p.progress === null || p.progress === undefined
+    ? `<span>進捗 ${NONE}</span>`
+    : `<span>進捗 <span class="tnum">${p.progress}%</span><span class="pbar" aria-hidden="true"><i style="width:${p.progress}%"></i></span></span>`);
+  m.push(p.updated ? `<span>最終更新 <span class="tnum">${esc(fmtDay(p.updated))}</span>（申告）</span>` : `<span>最終更新 ${NONE}</span>`);
+  m.push(p.commitAt ? `<span>コミット <span class="tnum">${esc(fmtAt(p.commitAt))}</span></span>` : `<span>コミット ${NOGET}</span>`);
+  if (p.source === 'GPT') m.push(p.synced && !isNaN(Date.parse(p.synced)) ? `<span>同期 <span class="tnum">${esc(fmtAt(p.synced))}</span></span>` : `<span>同期 ${NOGET}</span>`);
+  return `<div class="p-meta">${m.join('')}</div>`;
+}
+function projRow(p) {
+  const i = info(p);
+  const key = p.name;
+  const open = openQuests.has(key);
+  return `<div class="lrow click prow" data-row="${esc(key)}">
+    <div class="p-head">${srcChip(p)}<button class="pname" type="button" data-toggle="${esc(key)}" aria-expanded="${open}">${esc(p.name)}</button>${p.source !== 'GPT' && p.dept ? chip('stg', deptName(p.dept)) : ''}${p.priority ? chip('gry', `優先度 ${p.priority}`) : ''}${stageChip(p)}${stateChips(p, i)}</div>
+    <div class="p-due">${dueHtml(i)}</div>
+    <div class="p-next">${p.next ? `<div class="clamp1"><span class="lbl">次：</span>${esc(p.next)}</div>` : `<span class="lbl">次：</span>${NONE}`}</div>
+    <div class="p-who">${facesHtml(p)}</div>
+    ${p.blocker ? `<div class="p-blk clamp2"><span class="lbl">障害：</span>${esc(p.blocker)}</div>` : ''}
+    ${metaHtml(p)}
+    ${open ? `<div class="p-exp">${expHtml(p)}</div>` : ''}
+  </div>`;
 }
 
-const hpColor = (p) => (p >= 70 ? 'var(--hp)' : p >= 30 ? 'var(--mid)' : 'var(--low)');
-
-// ---- メッセージウィンドウ（文字送り） ----
-let msgQueue = [], msgIndex = 0, typing = null;
-function typeMessage(text) {
-  clearInterval(typing);
-  const el = $('msg'); el.textContent = '';
-  let i = 0;
-  typing = setInterval(() => { el.textContent = text.slice(0, ++i); if (i >= text.length) clearInterval(typing); }, 45);
-}
-function nextMessage() {
-  if (!msgQueue.length) return;
-  typeMessage(msgQueue[msgIndex % msgQueue.length]);
-  msgIndex++;
-}
-$('message').onclick = nextMessage;
-setInterval(nextMessage, 7000);
-
-// 案件一覧：最初は詳細を閉じる（オーナー 2026-11-23「長くて見づらい。全文表示で開けるように」）
-const openQuests = new Set((() => { try { return JSON.parse(localStorage.getItem('openQuests') || '[]'); } catch (e) { return []; } })());
+// ---- 画面の状態（端末に覚える：区分・事業部・開いた行） ----
+let questFilter = store.get('questFilter') || 'すべて';
+let deptFilter = store.get('deptFilter') || 'すべて';
+if (!['すべて', 'Claude', 'GPT'].includes(questFilter)) { deptFilter = questFilter; questFilter = 'すべて'; }
+const openQuests = new Set((() => { try { return JSON.parse(store.get('openQuests') || '[]'); } catch (e) { return []; } })());
+const saveOpen = () => store.set('openQuests', JSON.stringify([...openQuests]));
+let needOnly = false, query = '', projLimit = 20, doneLimit = 20, blkAll = false, recentAll = false, askAll = false, teamAll = false, orgSel = 0, mrOpen = false;
+const openDetails = new Set(); // 開いた <details>（描き直しても開いたまま）
 let lastState = null;
-document.addEventListener('click', (ev) => {
-  const fb = ev.target.closest && ev.target.closest('#qfilter button');
-  if (fb) { questFilter = fb.dataset.f; localStorage.setItem('questFilter', questFilter); if (lastState) render(lastState); return; }
-  const b = ev.target.closest && ev.target.closest('.q-more');
-  if (!b) return;
-  const k = b.dataset.key;
-  if (openQuests.has(k)) openQuests.delete(k); else openQuests.add(k);
-  try { localStorage.setItem('openQuests', JSON.stringify([...openQuests])); } catch (e) {}
-  if (lastState) render(lastState);
-});
+
+// ---- 描画 ----
+const NAV = [['sec-asks', '要対応'], ['sec-projects', '案件'], ['sec-meet', '会議'], ['sec-team', 'チーム'], ['sec-org', '組織']];
+function renderNav(blkShown) {
+  const html = NAV.map(([id, t]) => `<a href="#${id === 'sec-asks' && blkShown ? 'sec-blockers' : id}" data-sec="${id}">${t}</a>`).join('');
+  $('hnav').innerHTML = html; $('cnav').innerHTML = html;
+  spy();
+}
 
 function render(s) {
   lastState = s;
-  const name = s.company || '社名未定';
-  $('company').textContent = name;
-  document.title = 'TENKA LAB';
-  $('updated').textContent = fmtTime(s.now);
-  $('h-avatar').innerHTML = Sprites.svg('オウセン', 52);
+  infoCache.clear();
+  $('app').hidden = false;
+  $('company').textContent = s.company || 'TENKA LAB';
+  $('updated').textContent = s.now ? `${fmtAt(s.now)} 取得` : '';
+  $('syncerr').hidden = !(s.sync && s.sync.ok === false) && !netError;
+  busySet = new Set((s.team || []).filter((m) => m.busy).map((m) => m.id));
 
-  const active = s.projects.filter((p) => !['納品済み', '中止'].includes(p.stage))
-    .sort((a, b) => (daysLeft(a.internalDue || a.due) ?? 9999) - (daysLeft(b.internalDue || b.due) ?? 9999));
-  const finished = s.projects.length - active.length;
-  const dueSoon = active.filter((p) => { const d = daysLeft(p.due); return d !== null && d <= 7; });
-
-  // 朝の報告（毎朝10時）
-  const mr = s.morning;
-  $('morning').hidden = !mr;
-  if (mr) {
-    const list = (items, cls = '') => items.length ? `<ul class="${cls}">${items.map((t) => `<li>${esc(t)}</li>`).join('')}</ul>` : '<ul><li>なし</li></ul>';
-    const m = mr.date.match(/\d{4}-(\d{2})-(\d{2})/);
-    const old = daysLeft(mr.date);
-    $('morning-tab').textContent = `朝の報告 ${m ? `${+m[1]}/${+m[2]}` : mr.date} 10:00`;
-    $('morning-body').innerHTML = `
-      <p class="lead">${esc(mr.summary.join(' '))}</p>
-      ${old !== null && old < 0 ? `<p class="stale">（${-old}日前の報告です）</p>` : ''}
-      <div class="cols">
-        <div><h3>昨日からの進み具合</h3>${list(mr.progress)}</div>
-        <div><h3>今日の予定</h3>${list(mr.today)}</div>
-        <div><h3>遅れ・リスク</h3>${list(mr.risks, 'risk-list')}${mr.numbers.length ? `<h3>数字</h3>${list(mr.numbers)}` : ''}</div>
-      </div>`;
-  }
-
-  // オーナー確認事項（parse.js が作る。回答済み・反映待ちのものは answered に回答が入る）
+  const active = sortActive(s.projects.filter((p) => !DONE.has(p.stage)));
+  const finished = s.projects.filter((p) => DONE.has(p.stage));
+  const blocked = active.filter((p) => info(p).blocked);
+  const late = active.filter((p) => info(p).late);
   const allAsks = s.asks || [];
-  const asks = allAsks.filter((a) => !a.answered);
+  const openAsks = allAsks.filter((a) => !a.answered);
   askMap = Object.fromEntries(allAsks.map((a) => [a.id, a]));
 
-  $('k-active').innerHTML = `${active.length}<small>件</small>`;
-  $('k-inbox').innerHTML = `${s.inbox.length}<small>件</small>`;
-  $('k-due').innerHTML = `${dueSoon.length}<small>件</small>`;
-  $('k-ask').innerHTML = `${asks.length}<small>件</small>`;
-  $('kpi-due').classList.toggle('alert', dueSoon.some((p) => daysLeft(p.due) <= 3));
-  $('kpi-ask').classList.toggle('alert', asks.length > 0);
+  // 1. まとめ（決まった型の文だけ。推測の言葉は入れない）
+  const parts = [];
+  if (blocked.length) parts.push(`障害が${blocked.length}件`);
+  if (late.length) parts.push(`遅れが${late.length}件`);
+  if (openAsks.length) parts.push(`オーナーの確認が${openAsks.length}件`);
+  const lead = parts.length ? parts.join('、') + 'あります。' : '止まっているものはありません。';
+  const soon7 = active.filter((p) => { const l = info(p).left; return l !== null && l >= 0 && l <= 7; }).length;
+  const nr = s.ops && s.ops.nextRun;
+  const subline = [`進行中 ${active.length}件`, `7日以内の期限 ${soon7}件`, nr ? `次の巡回 ${hm(nr)}（${until(nr)}）` : ''].filter(Boolean).join(' ・ ');
+  const blkShown = blocked.length + late.length > 0;
+  const tile = (cls, label, n, href) => `<a class="tile ${n ? cls : ''}" href="#${href}"><div class="k">${label}</div><div class="v">${n}<small>件</small></div></a>`;
+  $('summary').innerHTML = `<div class="sum-top">${av('オウセン', 'l', { cls: 'av-sum-l' })}${av('オウセン', 'm', { cls: 'av-sum-s' })}
+      <div style="min-width:0"><p class="sum-lead">${esc(lead)}</p><p class="sum-sub tnum">${esc(subline)}</p>${blkShown ? '' : '<p class="sum-ok">障害・遅れはありません</p>'}</div></div>
+    <div class="tiles">${tile('red', '障害', blocked.length, blkShown ? 'sec-blockers' : 'sec-projects')}${tile('org', '遅れ', late.length, blkShown ? 'sec-blockers' : 'sec-projects')}${tile('acc', '確認待ち', openAsks.length, 'sec-asks')}${tile('', '進行中', active.length, 'sec-projects')}</div>`;
 
-  // クエスト一覧
-  const quest = (p, i) => {
-    const color = `var(${STAGE_COLOR[p.stage] || '--text'})`;
-    return `<div class="quest ${i === 0 ? 'first' : ''}">
-      <span class="cursor">▶</span>
-      <div>
-        <div class="q-name">${p.url ? `<a href="${esc(p.url)}" target="_blank" rel="noopener">${esc(p.name)}</a>` : esc(p.name)}</div>
-        <div class="q-meta"><span class="src ${p.source === 'GPT' ? 'gpt' : 'claude'}">${esc(p.source || 'Claude')}</span>${p.dept && p.dept !== 'GPT' ? `<span>${esc(p.dept)}</span>` : ''}${[p.client, p.kind].filter(Boolean).map((x) => `<span>${esc(x)}</span>`).join('')}${p.amount ? `<span class="reward">${esc(p.amount)}</span>` : ''}${dueLabel(p.due)}${p.internalDue ? dueLabel(p.internalDue, '社内締切') : ''}${p.risk ? '<span class="risk">遅れそう</span>' : ''}</div>
-      </div>
-      <div class="bars">
-        <span class="stage" style="color:${color}">【${esc(p.stage)}】</span> <span class="num">${p.progress}%</span>
-        <div class="bar"><i style="width:${p.progress}%;background:${hpColor(p.progress)}"></i></div>
-      </div>
-      <div class="who"><span class="avatar">${face(p.owner)}</span>${esc(p.owner)}</div>
-      ${p.risk ? `<div class="q-risk ${openQuests.has(p.name) ? '' : 'clamp'}">遅れの理由 ▷ ${esc(p.risk)}</div>` : ''}
-      ${p.next ? `<div class="q-next ${openQuests.has(p.name) ? '' : 'clamp'}">${esc(p.next)}</div>` : ''}
-      ${openQuests.has(p.name) ? scheduleHtml(p.schedule) : ''}
-      ${(p.next || p.risk || (p.schedule && p.schedule.length)) ? `<button class="q-more" data-key="${esc(p.name)}">${openQuests.has(p.name) ? '閉じる' : '全文表示'}</button>` : ''}
-    </div>`;
-  };
-  // 絞り込み：すべて / Claude / GPT / 事業部ごと（件数つき）
-  const depts = [...new Set(active.map((p) => p.dept).filter((d) => d && d !== 'GPT'))];
-  const filters = ['すべて', 'Claude', 'GPT', ...depts];
-  if (!filters.includes(questFilter)) questFilter = 'すべて';
-  const match = (p, f) => f === 'すべて' || (f === 'Claude' || f === 'GPT' ? (p.source || 'Claude') === f : p.dept === f);
-  $('qfilter').innerHTML = filters.map((f) => `<button data-f="${esc(f)}" class="${f === questFilter ? 'on' : ''}">${esc(f)} ${active.filter((p) => match(p, f)).length}</button>`).join('');
-  const shown = active.filter((p) => match(p, questFilter));
-  $('projects').innerHTML = shown.length ? shown.map(quest).join('')
-    : active.length ? `<div class="empty">「${esc(questFilter)}」の進行中の案件はありません。</div>`
-    : `<div class="empty">進行中の案件はありません。<br>応募を決めた案件を GitHub の 05_projects/_inbox/ に入れると、オウセンたちが着手します。</div>`;
-  if (finished) $('projects').innerHTML += `<div class="empty">完了・中止: ${finished}件</div>`;
+  // 1.5 最近の動き（直近のコミット。動いていることが目に見えるように）
+  const rc = s.recent || [];
+  $('recent-n').textContent = '48時間以内';
+  const rShow = rc.length > 6 && !recentAll ? rc.slice(0, 5) : rc;
+  $('recent').innerHTML = (rShow.length ? rShow.map((c) => `<div class="lrow rrow">
+      <span class="rt tnum">${esc(hm(c.at))}<span class="sub">${esc(ago(c.at))}</span></span>
+      ${av(c.who, 's')}<span class="rw">${esc(c.who)}</span><span class="rx clamp1">${esc(c.text)}</span></div>`).join('')
+    : '<div class="empty">48時間以内の動きはありません</div>')
+    + (rShow.length < rc.length ? `<div class="more-row"><button class="btn txt" type="button" data-act="recent-all">すべて表示（残り${rc.length - rShow.length}件）</button></div>` : '');
 
-  // パーティ
-  $('team').innerHTML = s.team.map((m) => {
-    const busy = m.busy ?? m.count > 0; // 担当0件でも、日程やログで動いていれば稼働中
-    return `<div class="member ${busy ? 'busy' : ''}">
-      <span class="avatar">${Sprites.svg(m.id, 40)}</span>
-      <div style="min-width:0"><div class="n">${esc(m.id)}<span class="j">${esc(m.role)}</span></div>
-        ${m.count || !(m.task || m.next || m.log) ? `<div class="r">${m.count ? esc(m.projects.join('、')) : '—'}</div>` : ''}</div>
-      <span class="st ${busy ? 'busy' : 'free'}">${busy ? `稼働中${m.count ? `<br>${m.count}件` : ''}` : '待機'}</span>
-      ${workHtml(m)}
-    </div>`;
-  }).join('');
+  // 2. 障害・遅れ
+  $('sec-blockers').hidden = !blkShown;
+  if (blkShown) {
+    const items = active.filter((p) => info(p).blocked || info(p).late);
+    $('blk-n').textContent = `${items.length}件`;
+    const show = items.length > 6 && !blkAll ? items.slice(0, 5) : items;
+    $('blockers').innerHTML = show.map((p) => {
+      const i = info(p); const key = 'b:' + p.name; const open = openQuests.has(key);
+      const text = p.blocker || p.risk || (i.over ? `期限を${i.over}日過ぎています` : '');
+      return `<div class="lrow click" data-row="${esc(key)}"><div class="brow">
+          <span class="bchips">${i.blocked ? chip('red', '障害') : ''}${i.late ? chip('org', i.over ? `${i.over}日超過` : '遅れ') : ''}</span>
+          <div style="min-width:0"><button class="pname bname" type="button" data-toggle="${esc(key)}" aria-expanded="${open}">${esc(p.name)}</button><p class="btext clamp2">${esc(text)}</p></div>
+          <span class="bside">${facesHtml(p)}<span>${dueHtml(i)}</span></span></div>
+        ${open ? expHtml(p) : ''}</div>`;
+    }).join('') + (show.length < items.length ? `<div class="more-row"><button class="btn txt" type="button" data-act="blk-all">すべて表示（残り${items.length - show.length}件）</button></div>` : '');
+  }
 
-  // 冒険の記録（稼働状況）
+  // 3. オーナー確認事項（入力中は描き直さない）
+  renderAsks(allAsks, openAsks);
+
+  // 4. 経営会議・受付
+  const ms = s.meetings || [];
+  const mOpen = ms.filter((m) => m.open);
+  $('meet-n').textContent = `${mOpen.length}件`;
+  $('meetings').innerHTML = (mOpen.length ? mOpen.map((m) => {
+    const w = m.waiting ? chip(m.waiting === 'オウセン' ? 'org' : 'stg', `${m.waiting}の返事待ち`) : '';
+    const last = m.lastWho ? `最後 ${esc(m.lastWho)}${m.lastAt ? ` ・ ${esc(ago(m.lastAt))}` : ''}` : '';
+    const inner = `<div style="min-width:0"><p class="mname clamp1">${esc(m.name)}</p><div class="mline">${w}<span class="sub">${last}</span></div></div>${m.waiting ? av(m.waiting, 's') : ''}`;
+    return m.url ? `<a class="lrow click mrow" href="${esc(m.url)}" target="_blank" rel="noopener">${inner}</a>` : `<div class="lrow mrow">${inner}</div>`;
+  }).join('') : '<div class="empty">開いている議題はありません</div>')
+    + (ms.length - mOpen.length ? `<div class="lrow sub">閉じた議題 ${ms.length - mOpen.length}件</div>` : '');
+  const ik = s.intake || { open: 0 };
+  const r = repoName();
+  $('intake').innerHTML = `<div class="k">受付中</div><div class="big">${ik.open}<small>件</small></div>
+    ${r ? `<p style="margin-top:8px"><a href="https://github.com/${esc(r)}/issues/new" target="_blank" rel="noopener">受付フォームを開く ↗</a></p>` : ''}
+    <p class="sub" style="margin-top:4px">副業・秘密の情報は書かない</p>
+    <hr><div class="k">着手待ちの案件（_inbox）</div><div class="big">${s.inbox.length}<small>件</small></div>
+    ${s.inbox.length ? `<ul>${s.inbox.map((x) => `<li class="clamp1">${esc(x.name)}</li>`).join('')}</ul>` : ''}`;
+
+  // 5. 案件
+  renderProjects(active, finished);
+
+  // 6. 朝の報告・稼働状況
+  renderMorning(s.morning);
+  renderOps(s);
+
+  // 7. チーム
+  const team = (s.team || []).slice().sort((a, b) => (b.busy ? 1 : 0) - (a.busy ? 1 : 0));
+  $('team-n').textContent = `稼働中 ${team.filter((m) => m.busy).length}人／${team.length}人`;
+  const tShow = team.length > 9 && !teamAll ? team.slice(0, 8) : team;
+  $('team').innerHTML = `<div class="team">${tShow.map(memberHtml).join('')}</div>`
+    + (tShow.length < team.length ? `<div class="more-row" style="padding-bottom:0"><button class="btn txt" type="button" data-act="team-all">すべて表示（残り${team.length - tShow.length}人）</button></div>` : '');
+
+  // 8. 組織図
+  renderOrg(s.org);
+
+  // 9. 応募一覧
+  renderApps(s.applications || []);
+
+  renderNav(blkShown);
+}
+
+function renderAsks(allAsks, openAsks) {
+  $('ask-n').textContent = `未回答 ${openAsks.length}件`;
+  if (document.activeElement && document.activeElement.classList.contains('ans-c')) return;
+  const order = { '決裁': 0, '納品': 1, '確認事項': 2, '報告': 3 };
+  const sorted = allAsks.slice().sort((a, b) => (a.answered ? 1 : 0) - (b.answered ? 1 : 0) || (order[a.kind] ?? 9) - (order[b.kind] ?? 9));
+  const cutList = sorted.length > 7 && !askAll;
+  const show = cutList ? sorted.filter((a) => !a.answered).slice(0, 6) : sorted;
+  $('asks').innerHTML = (show.length ? show.map((a) => `<div class="lrow ask${a.answered ? ' done' : ''}">
+      <p class="from">${esc(a.kind)} ・ ${esc(a.from)}</p>
+      <p class="q">${esc(a.text)}</p>
+      ${a.answered
+        ? `<div class="st">${chip('stg', `${a.answered} と回答・反映待ち`)}</div>`
+        : `<div class="ans">
+            <input class="ans-c" data-id="${a.id}" placeholder="ひとこと（任意）" aria-label="ひとこと（任意）" value="${esc(drafts[a.id] || '')}">
+            <button class="btn pri" type="button" data-ans="OK" data-id="${a.id}">OK</button>
+            <button class="btn sec" type="button" data-ans="NG" data-id="${a.id}">NG</button>
+          </div>`}
+    </div>`).join('') : '<div class="empty">ありません</div>')
+    + (cutList ? `<div class="more-row"><button class="btn txt" type="button" data-act="ask-all">すべて表示（残り${sorted.length - show.length}件）</button></div>` : '');
+}
+
+function renderProjects(active, finished) {
+  const srcOf = (p) => p.source || 'Claude';
+  const bySrc = (f) => active.filter((p) => f === 'すべて' || srcOf(p) === f);
+  $('proj-n').textContent = `進行中 ${active.length}件`;
+  $('p-seg').innerHTML = ['すべて', 'Claude', 'GPT'].map((f) => `<button type="button" data-seg="${f}" class="${f === questFilter ? 'on' : ''}" aria-pressed="${f === questFilter}">${f} ${bySrc(f).length}</button>`).join('');
+  const pool = bySrc(questFilter);
+  const depts = {};
+  pool.forEach((p) => { if (p.dept && p.source !== 'GPT') depts[p.dept] = (depts[p.dept] || 0) + 1; });
+  const dnames = Object.keys(depts);
+  if (deptFilter !== 'すべて' && !dnames.includes(deptFilter)) deptFilter = 'すべて';
+  $('p-depts').innerHTML = !dnames.length ? '' : dnames.length > 6
+    ? `<select id="p-dsel" aria-label="事業部"><option value="すべて">事業部：すべて</option>${dnames.map((d) => `<option value="${esc(d)}" ${d === deptFilter ? 'selected' : ''}>${esc(deptName(d))} ${depts[d]}</option>`).join('')}</select>`
+    : [['すべて', 'すべての事業部']].concat(dnames.map((d) => [d, `${deptName(d)} ${depts[d]}`]))
+      .map(([v, t]) => `<button type="button" data-dept="${esc(v)}" class="${v === deptFilter ? 'on' : ''}" aria-pressed="${v === deptFilter}">${esc(t)}</button>`).join('');
+  const q = query.trim().toLowerCase();
+  const hit = (p) => !q || [p.name, p.client, p.lead, p.owner].some((v) => String(v || '').toLowerCase().includes(q));
+  const base = pool.filter((p) => (deptFilter === 'すべて' || p.dept === deptFilter) && hit(p));
+  $('p-need-n').textContent = base.filter((p) => info(p).need).length;
+  const list = needOnly ? base.filter((p) => info(p).need) : base;
+  const show = list.slice(0, projLimit);
+  let html = show.length ? show.map(projRow).join('')
+    : active.length ? '<div class="empty">条件に合う進行中の案件はありません</div>'
+    : '<div class="empty">進行中の案件はありません。応募を決めた案件を 05_projects/_inbox/ に入れると、オウセンたちが着手します。</div>';
+  if (show.length < list.length) html += `<div class="more-row"><button class="btn txt" type="button" data-act="proj-more">さらに表示（残り${list.length - show.length}件）</button></div>`;
+  if (finished.length) {
+    const fin = finished.slice().sort((a, b) => String(b.doneDate || b.updated).localeCompare(String(a.doneDate || a.updated)));
+    const fshow = fin.slice(0, doneLimit);
+    html += `<details class="done-d" data-key="done" ${openDetails.has('done') ? 'open' : ''}><summary>完了・中止 ${fin.length}件</summary>
+      ${fshow.map((p) => `<div class="lrow drow">${p.stage === '中止' ? chip('gry', '中止') : chip('grn', '完了')}<span class="dn">${esc(p.name)}</span>${p.dept && p.source !== 'GPT' ? `<span class="sub">${esc(deptName(p.dept))}</span>` : ''}${p.source === 'GPT' ? '<span class="sub">GPT</span>' : ''}${p.doneDate || p.updated ? `<span class="sub tnum">${esc(fmtDay(p.doneDate || p.updated))}</span>` : ''}</div>`).join('')}
+      ${fshow.length < fin.length ? `<div class="more-row"><button class="btn txt" type="button" data-act="done-more">さらに20件</button></div>` : ''}</details>`;
+  }
+  $('projects').innerHTML = html;
+}
+
+function renderMorning(mr) {
+  $('sec-morning').hidden = !mr;
+  if (!mr) { $('sec-ops').className = 'c12'; return; }
+  $('sec-ops').className = 'c4';
+  const old = daysLeft(mr.date);
+  $('mr-date').innerHTML = `<span class="tnum">${esc(fmtDay(mr.date))} 10:00</span>${old !== null && old < 0 ? ' ' + chip('gry', `古い・${-old}日前`) : ''}`;
+  const ul = (items) => items.length ? `<ul class="bul">${items.map((t) => `<li>${esc(t)}</li>`).join('')}</ul>` : '<ul class="bul"><li>なし</li></ul>';
+  const el = $('morning');
+  el.classList.toggle('open', mrOpen);
+  el.innerHTML = `<p class="mr-lead">${esc(mr.summary.join(' '))}</p>
+    <div class="mr-cols">
+      <div class="mr-x"><h3>昨日から</h3>${ul(mr.progress)}</div>
+      <div class="mr-x"><h3>今日の予定</h3>${ul(mr.today)}${mr.numbers.length ? `<h3>数字</h3>${ul(mr.numbers)}` : ''}</div>
+      <div class="mr-risk"><h3>遅れ・リスク</h3>${ul(mr.risks)}</div>
+    </div>
+    <button class="btn txt mr-more" type="button" data-act="mr-more" aria-expanded="${mrOpen}">${mrOpen ? '閉じる' : '続きを読む'}</button>`;
+}
+
+function renderOps(s) {
   const hb = s.ops.heartbeat;
-  const last = hb?.last_run || null;
-  const lastAgo = last ? (Date.now() - new Date(last)) / 3600000 : Infinity;
-  let st;
-  if (!last) st = ['idle', 'まだ巡回の記録がありません'];
-  else if (lastAgo <= 2.5) st = ['ok', 'オウセンは稼働中'];
-  else st = ['warn', '巡回が止まっている可能性があります'];
+  const last = hb && hb.last_run || null;
+  const lastAgo = last ? (Date.now() - Date.parse(last)) / 3600e3 : Infinity;
+  // 直前の予定時刻から1時間たっても、その時刻より新しい記録が無ければ「止まっている可能性」（夜の空き時間で誤って警告しない）
+  const pr = s.ops.prevRun ? Date.parse(s.ops.prevRun) : null;
+  const missed = !!last && pr !== null && Date.parse(last) < pr && Date.now() - pr > 3600e3;
+  const st = !last ? ['', '巡回の記録がありません'] : !missed ? ['ok', '巡回は動いています'] : ['warn', '巡回が止まっている可能性があります'];
+  const gpt = s.projects.filter((p) => p.source === 'GPT');
+  const latest = s.ops.gptSync || null; // PC 版だけが知っている。スマホ版は未取得
+  const gptSync = !gpt.length ? NOGET : !latest ? NOGET
+    : `${esc(fmtAt(latest))}${Date.now() - Date.parse(latest) > 3600e3 ? ' ' + chip('pur', `未同期・${Math.floor((Date.now() - Date.parse(latest)) / 3600e3)}時間前`) : ''}`;
   const rows = [
-    ['最終巡回', last ? `${fmtTime(last)}（${ago(last)}）` : '—'],
-    ['前回の結果', hb?.result ? esc(hb.result) : '—'],
-    ['次回の巡回', s.ops.nextRun ? `${fmtTime(s.ops.nextRun)}（${until(s.ops.nextRun)}）` : '—'],
-    ['最終更新', s.ops.lastCommit ? `${fmtTime(s.ops.lastCommit.at)}` : '—'],
-    ['GitHub', s.sync.at ? (s.sync.ok ? `${ago(s.sync.at)} 同期済み` : `<span style="color:var(--low)">同期失敗</span>`) : '確認中…'],
+    ['最終巡回', last ? `${esc(fmtAt(last))}（${esc(ago(last))}）` : '—'],
+    ['前回の結果', hb && hb.result ? esc(hb.result) : '—'],
+    ['次の巡回', s.ops.nextRun ? `${esc(hm(s.ops.nextRun))}（${esc(until(s.ops.nextRun))}）` : '—'],
+    ['最新のコミット', s.ops.lastCommit ? esc(fmtAt(s.ops.lastCommit.at)) : NOGET],
+    ['この画面の取得', s.now ? esc(fmtAt(s.now)) : '—'],
+    ['GitHub', s.sync && s.sync.at ? (s.sync.ok ? `${esc(ago(s.sync.at))} 取得` : chip('red', '取得できませんでした')) : '確認中'],
+    ['GPT の同期', gptSync],
+    ['利用枠', NOGET],
+    ['RAM・CPU', NOGET],
   ];
-  $('ops').innerHTML = `<div class="status ${st[0]}">${st[1]}</div>`
-    + rows.map(([k, v]) => `<div class="row"><span>${k}</span><span>${v}</span></div>`).join('');
+  $('ops').innerHTML = `<div class="ops-st ${st[0]}"><i aria-hidden="true"></i>${st[1]}</div>
+    <dl class="kv">${rows.map(([k, v]) => `<dt>${k}</dt><dd>${v}</dd>`).join('')}</dl>`;
+}
 
-  // 報告
-  // 回答を入力中は描き直さない（入力欄のフォーカスが外れるため）
-  if (!document.activeElement?.classList.contains('ans-c')) $('asks').innerHTML = allAsks.length
-    ? `<ul class="list">${allAsks.map((a) => `<li><span class="from">${esc(a.from)}</span>${esc(a.text)}
-        ${a.answered
-          ? `<div class="answered">回答済み（${esc(a.answered)}）・オウセンの反映待ち</div>`
-          : `<div class="ans">
-              <input class="ans-c" data-id="${a.id}" placeholder="ひとこと（任意）" value="${esc(drafts[a.id] || '')}">
-              <button data-ans="OK" data-id="${a.id}">OK</button>
-              <button data-ans="NG" data-id="${a.id}">NG</button>
-            </div>`}
-      </li>`).join('')}</ul>`
-    : `<div class="empty">ありません</div>`;
+function memberHtml(m) {
+  const items = [];
+  if (m.task) {
+    const d = daysLeft(m.task.date);
+    const late = d !== null && d < 0;
+    items.push(`<li><span class="k">いま</span><span class="v">${late ? chip('org', '遅れ') + ' ' : ''}<span class="tnum">${esc(fmtDay(m.task.date))}</span> ${esc(m.task.task)} <span class="sub">${esc(shortName(m.task.project))}</span></span></li>`);
+  }
+  if (m.next) items.push(`<li><span class="k">次</span><span class="v">${esc(m.next.text)}</span></li>`);
+  if (m.log) items.push(`<li><span class="k">記録</span><span class="v"><span class="tnum">${esc(fmtDay(m.log.date))}</span> ${esc(m.log.text)}</span></li>`);
+  return `<div class="mem">
+    <div class="mem-h">${av(m.id, 'm', { busy: m.busy })}<div class="nm"><b>${esc(m.id)}</b><span>${esc(m.role)}</span></div>${m.busy ? chip('grn', '稼働中') : chip('stg', '待機')}</div>
+    <ul class="work">${items.length ? items.join('') : '<li><span class="k"></span><span class="v sub">待機中</span></li>'}</ul>
+  </div>`;
+}
 
-  // 応募一覧（受注・送信待ち・返事待ちを上に。終了は件数だけ）
-  const apps = s.applications || [];
+const ph = (v) => !v || /^（/.test(String(v).trim()); // 「（…）」で始まる見本の値
+function renderOrg(o) {
+  $('sec-org').hidden = !o;
+  if (!o) return;
+  $('org-upd').textContent = o.updated ? `更新 ${fmtDay(o.updated)}` : '';
+  const orgs = o.orgs || [];
+  if (orgSel >= orgs.length) orgSel = 0;
+  const statusChip = (st) => st === '稼働中' ? chip('grn', '稼働中') : chip('none', st && !ph(st) ? st : '役職案');
+  const memRow = (mm, tenka) => `<div class="umem">${ph(mm.name) ? av('?', 's', { label: '未記入' }) : av(mm.name, 's', { busy: tenka && busySet.has(whoName(mm.name)) })}
+      <div style="min-width:0"><div class="n">${ph(mm.name) ? NONE : esc(mm.name)}</div><div class="r clamp1">${ph(mm.role) ? NONE : esc(mm.role)}</div></div>${statusChip(mm.status)}</div>`;
+  const cols = orgs.map((g, idx) => {
+    const tenka = g.ai === 'Claude';
+    const units = (g.units || []);
+    const filled = units.some((u) => !ph(u.name) && (u.members || []).some((mm) => !ph(mm.name)));
+    const name = ph(g.name) ? `${g.ai || ''} 側の組織` : g.name;
+    const head = `<div class="org-h"><span class="on">${esc(name)}</span>${g.ai === 'GPT' ? chip('gp', 'GPT') : chip('cl', g.ai || 'Claude')}
+      ${g.ceo && !ph(g.ceo) ? `<span class="ceo">${av(g.ceo, 'm')}<span>CEO <b style="color:var(--text)">${esc(g.ceo)}</b></span></span>` : ''}</div>`;
+    const body = !filled ? `<p class="sub" style="font-size:15px">${esc(g.ai === 'GPT' ? 'GPT 側' : name)}の組織図はまだ記入されていません</p>`
+      : units.filter((u) => !ph(u.name)).map((u) => `<div class="unit"><div class="unit-h"><b>${esc(u.name)}</b><span>部長 ${ph(u.head) ? '未記入' : esc(u.head)}</span></div>
+          ${(u.members || []).map((mm) => memRow(mm, tenka)).join('')}</div>`).join('')
+        + ((g.advisors || []).length ? `<div class="unit"><div class="unit-h"><b>顧問</b></div>${g.advisors.map((mm) => memRow(mm, tenka)).join('')}</div>` : '');
+    return `<div class="orgcol${idx === orgSel ? ' sel' : ''}">${head}${body}</div>`;
+  });
+  $('org').innerHTML = (orgs.length > 1 ? `<div class="seg org-seg" role="group" aria-label="組織">${orgs.map((g, i) => `<button type="button" data-org="${i}" class="${i === orgSel ? 'on' : ''}" aria-pressed="${i === orgSel}">${esc(ph(g.name) ? `${g.ai} 側` : g.name)}</button>`).join('')}</div>` : '')
+    + `<div class="orgs">${cols.join('')}</div>`;
+}
+
+function renderApps(apps) {
   const openApps = apps.filter((a) => a.status !== '終了');
-  const order = { '受注': 0, '送信待ち': 1, '返事待ち': 2 };
+  const order = { '送信待ち': 0, '受注': 1, '返事待ち': 2 };
   openApps.sort((a, b) => order[a.status] - order[b.status] || b.date.localeCompare(a.date));
-  const waitN = apps.filter((a) => a.status === '返事待ち').length;
-  $('k-apps').innerHTML = waitN + '<small>件</small>';
-  const cls = { '返事待ち': 'wait', '送信待ち': 'todo', '受注': 'won' };
+  const n = (st) => apps.filter((a) => a.status === st).length;
+  $('apps-sum').innerHTML = `<span class="tnum">送信待ち ${n('送信待ち')} ・ 返事待ち ${n('返事待ち')} ・ 受注 ${n('受注')}</span>`;
+  const cls = { '返事待ち': 'stg', '送信待ち': 'org', '受注': 'grn' };
   const ended = apps.length - openApps.length;
   const sent = apps.filter((a) => a.status !== '送信待ち').length;
-  $('apps').innerHTML = (openApps.length
-    ? '<ul class="list apps">' + openApps.map((a) => '<li><span class="from">'
-        + esc([a.date.slice(5).replace('-', '/'), a.site, a.amount].filter(Boolean).join(' ・ '))
-        + '</span><span class="st ' + cls[a.status] + '">' + a.status + '</span>'
-        + (a.url ? '<a href="' + esc(a.url) + '" target="_blank" rel="noopener">' + esc(a.name) + '</a>' : esc(a.name))
-        + (a.status === '送信待ち' && a.text ? '<div class="send">'
-          + '<button data-copy="' + esc(a.file) + '">応募文をコピー</button>'
-          + (a.url ? '<a class="btn" href="' + esc(a.url) + '" target="_blank" rel="noopener">案件ページを開く</a>' : '')
-          + '<button data-sent="' + esc(a.file) + '">送った</button>'
-          + '<span class="hint">金額 ' + esc(a.amount || '—') + '／納品予定日 ' + esc(a.due || '—') + ' を入れて送ってください</span></div>' : '')
-        + '</li>').join('') + '</ul>'
-    : '<div class="empty">応募中の案件はありません</div>')
-    + '<div class="empty">これまでに送った応募 ' + sent + '件' + (ended ? '（終了 ' + ended + '件）' : '') + '</div>';
-
+  $('apps').innerHTML = (openApps.length ? openApps.map((a) => `<div class="lrow app">
+      <p class="from tnum">${esc([a.date.slice(5).replace('-', '/'), a.site, a.amount].filter(Boolean).join(' ・ '))}</p>
+      <p class="an">${chip(cls[a.status], a.status)}${a.url ? `<a href="${esc(a.url)}" target="_blank" rel="noopener">${esc(a.name)}</a>` : esc(a.name)}</p>
+      ${a.status === '送信待ち' && a.text ? `<div class="send">
+        <button class="btn pri" type="button" data-copy="${esc(a.file)}">応募文をコピー</button>
+        ${a.url ? `<a class="btn sec" href="${esc(a.url)}" target="_blank" rel="noopener">案件ページを開く</a>` : ''}
+        <button class="btn sec" type="button" data-sent="${esc(a.file)}">送った</button>
+        <span class="hint">金額 ${esc(a.amount || '—')}／納品予定日 ${esc(a.due || '—')} を入れて送ってください</span></div>` : ''}
+    </div>`).join('') : '<div class="empty">応募中の案件はありません</div>')
+    + `<div class="lrow sub">これまでに送った応募 ${sent}件${ended ? `（終了 ${ended}件）` : ''}</div>`;
   window.__apps = Object.fromEntries(apps.map((a) => [a.file, a]));
+}
 
-  // 依頼
-  $('inbox').innerHTML = s.inbox.length
-    ? `<ul class="list">${s.inbox.map((i) => `<li><span class="from">${esc([i.source, i.kind, i.amount].filter(Boolean).join(' ・ ') || '着手待ち')}</span>${esc(i.name)}</li>`).join('')}</ul>`
-    : `<div class="empty">空です</div>`;
-
-  // メッセージ
-  const msgs = [];
-  if (s.sync.ok === false) msgs.push('オウセン「GitHubと同期できていません。\nネットの接続を確認してください。」');
-  if (asks.length) msgs.push(`オウセン「オーナー、確認してほしいことが${asks.length}件あります。」`);
-  const over = active.filter((p) => daysLeft(p.due) !== null && daysLeft(p.due) < 0);
-  const risky = active.filter((p) => p.risk)
-  if (risky.length) msgs.push(`オウセン「${risky[0].name}が遅れそうです。\n確認事項に対策を出しました。」`)
-  if (over.length) msgs.push(`オウセン「${over[0].name}の納期を過ぎています。\nすぐに対応します。」`);
-  if (active.length) {
-    msgs.push(`オウセン「いま${active.length}件の案件を進めています。\nいちばん急ぐのは ${active[0].name}です。」`);
-    const busy = s.team.filter((m) => (m.busy ?? m.count) && m.id !== 'オーナー');
-    if (busy.length) msgs.push(`${busy.map((m) => m.id).join('、')}が作業中です。`);
-  } else {
-    msgs.push('オウセン「いまは進行中の案件がありません。\n次の案件を待っています。」');
+// いま見ている欄をヘッダーで示す
+function spy() {
+  const y = window.scrollY + 120;
+  let cur = '';
+  for (const [id] of NAV) {
+    const el = $(id); if (!el || el.closest('[hidden]')) continue;
+    const top = (id === 'sec-asks' && !$('sec-blockers').hidden ? $('sec-blockers') : el).getBoundingClientRect().top + window.scrollY;
+    if (top <= y) cur = id;
   }
-  if (waitN) msgs.push('オウセン「いま' + waitN + '件の応募の返事を待っています。」');
-  if (s.inbox.length) msgs.push(`未着手の案件が${s.inbox.length}件あります。\n次の巡回で着手します。`);
-  if (s.ops.nextRun) msgs.push(`次の巡回は${fmtTime(s.ops.nextRun)}です。（${until(s.ops.nextRun)}）`);
-  msgs.push('オウセン「勝てる戦しかしない。」');
-  const changed = JSON.stringify(msgs) !== JSON.stringify(msgQueue);
-  msgQueue = msgs;
-  if (changed) { msgIndex = 0; nextMessage(); }
+  document.querySelectorAll('.hnav a, .cnav a').forEach((a) => a.classList.toggle('on', a.dataset.sec === cur));
+}
+let spyRaf = 0;
+window.addEventListener('scroll', () => { if (!spyRaf) spyRaf = requestAnimationFrame(() => { spyRaf = 0; spy(); }); }, { passive: true });
+
+// ---- 操作 ----
+const rerender = () => { if (lastState) render(lastState); };
+document.addEventListener('click', (ev) => {
+  const t = ev.target;
+  const seg = t.closest('[data-seg]');
+  if (seg) { questFilter = seg.dataset.seg; store.set('questFilter', questFilter); projLimit = 20; rerender(); return; }
+  const dp = t.closest('[data-dept]');
+  if (dp) { deptFilter = dp.dataset.dept; store.set('deptFilter', deptFilter); projLimit = 20; rerender(); return; }
+  const og = t.closest('[data-org]');
+  if (og) { orgSel = +og.dataset.org; rerender(); return; }
+  const act = t.closest('[data-act]');
+  if (act) {
+    const a = act.dataset.act;
+    if (a === 'blk-all') blkAll = true;
+    if (a === 'recent-all') recentAll = true;
+    if (a === 'ask-all') askAll = true;
+    if (a === 'team-all') teamAll = true;
+    if (a === 'proj-more') projLimit += 20;
+    if (a === 'done-more') doneLimit += 20;
+    if (a === 'mr-more') mrOpen = !mrOpen;
+    rerender(); return;
+  }
+  // 行を押すと展開（行の中のリンク・ボタン・入力欄は除く。名前のボタンは展開）
+  const tg = t.closest('[data-toggle]');
+  const row = t.closest('[data-row]');
+  if (!tg && (!row || t.closest('a, button, input, select, summary, .exp'))) return;
+  const key = tg ? tg.dataset.toggle : row.dataset.row;
+  if (openQuests.has(key)) openQuests.delete(key); else openQuests.add(key);
+  saveOpen();
+  rerender();
+  const again = document.querySelector(`[data-toggle="${CSS.escape(key)}"]`);
+  if (again && tg) again.focus();
+});
+document.addEventListener('change', (ev) => {
+  if (ev.target.id === 'p-dsel') { deptFilter = ev.target.value; store.set('deptFilter', deptFilter); projLimit = 20; rerender(); }
+  if (ev.target.id === 'p-need') { needOnly = ev.target.checked; projLimit = 20; rerender(); }
+});
+$('p-q').addEventListener('input', (ev) => { query = ev.target.value; projLimit = 20; rerender(); });
+document.addEventListener('toggle', (ev) => {
+  const el = ev.target;
+  if (el.dataset && el.dataset.key) { if (el.open) openDetails.add(el.dataset.key); else openDetails.delete(el.dataset.key); }
+  if (el.id === 'apps-d') el.querySelector('.tg').textContent = el.open ? '閉じる' : '開く';
+}, true);
+
+// 知らせ（数秒で消える）
+let toastTimer = 0;
+function say(text) {
+  const el = $('toast');
+  el.textContent = text; el.classList.add('show');
+  clearTimeout(toastTimer); toastTimer = setTimeout(() => el.classList.remove('show'), 5000);
 }
 
 // ---- データの読み込み ----
 // PC（localhost）では server.js から、それ以外（スマホ）では GitHub から直接読む
-const LOCAL = ['localhost', '127.0.0.1'].includes(location.hostname);
-const store = {
-  get: (k) => { try { return localStorage.getItem(k); } catch { return null; } },
-  set: (k, v) => { try { localStorage.setItem(k, v); } catch {} },
-  del: (k) => { try { localStorage.removeItem(k); } catch {} },
-};
 const blobCache = new Map(); // sha → 中身（変わったファイルだけ取り直す）
-
-function say(text) { msgQueue = [text]; msgIndex = 0; nextMessage(); }
+let netError = false;
 
 async function gh(path, raw) {
   const r = await fetch('https://api.github.com' + path, {
@@ -627,7 +1094,8 @@ async function gh(path, raw) {
 
 async function stateFromGitHub() {
   const repo = store.get('gh_repo');
-  const [commit] = await gh(`/repos/${repo}/commits?per_page=1`);
+  const commits = await gh(`/repos/${repo}/commits?per_page=15`); // 先頭が最新。最近の動きにも使う
+  const commit = commits[0];
   const tree = await gh(`/repos/${repo}/git/trees/${commit.sha}?recursive=1`);
   const blobs = tree.tree.filter((t) => t.type === 'blob' && Parse.wanted(t.path));
   const keep = new Set(Parse.narrow(blobs.map((b) => b.path)));
@@ -638,12 +1106,17 @@ async function stateFromGitHub() {
   }));
   const c = commit.commit;
   return Parse.buildState(files, {
+    repo,
+    recent: commits.map((x) => ({ at: x.commit.committer.date, subject: x.commit.message.split('\n')[0], author: x.commit.author.name })),
     lastCommit: { at: c.committer.date, message: c.message.split('\n')[0], author: c.author.name },
     sync: { at: new Date().toISOString(), ok: true, message: '' },
   });
 }
 
-function showSetup(error) {
+// 認証の無い閲覧者には案件データを一切出さない（設定の画面だけ。背景にも何も描かない）
+function hideData() { lastState = null; $('app').hidden = true; ['summary', 'blockers', 'asks', 'meetings', 'intake', 'projects', 'morning', 'ops', 'team', 'org', 'apps'].forEach((id) => { $(id).innerHTML = ''; }); }
+function showSetup(error, clear) {
+  if (clear) hideData();
   const guess = /\.github\.io$/.test(location.hostname) ? location.hostname.split('.')[0] + '/ai-company' : '';
   $('f-repo').value = store.get('gh_repo') || guess;
   $('f-token').value = '';
@@ -658,17 +1131,20 @@ async function load() {
   try {
     if (LOCAL) {
       const r = await fetch('/api/state', { cache: 'no-store' });
+      netError = false;
       render(await r.json());
     } else if (!store.get('gh_token') || !store.get('gh_repo')) {
-      showSetup();
+      showSetup('', true);
     } else {
-      render(await stateFromGitHub());
+      const st = await stateFromGitHub();
+      netError = false;
+      render(st);
     }
   } catch (e) {
-    if (LOCAL) say('サーバーに接続できません。\nデスクトップのアイコンから起動し直してください。');
-    else if (e.status === 401) showSetup('トークンが無効か、期限切れです。新しいトークンを入力してください。');
-    else if (e.status === 403 || e.status === 404) showSetup('リポジトリが見つからないか、トークンに読み取り権限がありません。');
-    else say('GitHub に接続できません。\n電波の良いところで「最新を取得」を押してください。');
+    if (LOCAL) { say('サーバーに接続できません。\nデスクトップのアイコンから起動し直してください。'); }
+    else if (e.status === 401) showSetup('トークンが無効か、期限切れです。新しいトークンを入力してください。', true);
+    else if (e.status === 403 || e.status === 404) showSetup('リポジトリが見つからないか、トークンに読み取り権限がありません。', true);
+    else { netError = true; $('syncerr').hidden = !lastState; say('GitHub に接続できません。\n電波の良いところで「更新」を押してください。'); }
   } finally {
     loading = false;
   }
@@ -708,7 +1184,7 @@ async function saveAnswer(ask, answer, comment) {
     body: JSON.stringify({ message: `オーナーの回答: ${answer}（${ask.from}）`, content: utf8Base64(Parse.answerFile(ask, answer, comment, at)) }),
   });
   if (r.status === 403 || r.status === 404) {
-    const e = new Error('トークンに書き込みの権限がありません。Contents を「Read and write」にしたトークンを作り直し、⚙ から入れ直してください。');
+    const e = new Error('トークンに書き込みの権限がありません。Contents を「Read and write」にしたトークンを作り直し、「設定」から入れ直してください。');
     e.permission = true;
     throw e;
   }
@@ -743,14 +1219,14 @@ $('asks').addEventListener('click', async (ev) => {
   const answer = btn.dataset.ans;
   const comment = drafts[ask.id] || '';
   if (answer === 'NG' && !comment.trim()) {
-    say('NGのときは、理由やどうしてほしいかを\nひとこと書いてから押してください。');
+    say('NG のときは、理由やどうしてほしいかを\nひとこと書いてから押してください。');
     return;
   }
   btn.closest('.ans').querySelectorAll('button,input').forEach((el) => { el.disabled = true; });
   try {
     await saveAnswer(ask, answer, comment);
     delete drafts[ask.id];
-    say(`オウセン「回答を受け取りました（${answer}）。\nすぐに反映します。」`);
+    say(`回答を受け取りました（${answer}）。\nオウセンが反映します。`);
     setTimeout(load, 1500);
   } catch (e) {
     say(e.message);
@@ -771,7 +1247,7 @@ $('setup-form').onsubmit = (ev) => {
   say('読み込み中…');
   load();
 };
-$('f-forget').onclick = () => { store.del('gh_token'); store.del('gh_repo'); showSetup('設定を消しました。'); };
+$('f-forget').onclick = () => { store.del('gh_token'); store.del('gh_repo'); showSetup('設定を消しました。', true); };
 $('settings').onclick = () => showSetup();
 if (!LOCAL) document.body.classList.add('gh');
 
