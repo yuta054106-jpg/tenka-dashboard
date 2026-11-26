@@ -205,8 +205,8 @@
     return null;
   }
 
-  // クラウドのオウセンは24時間、1時間おき（毎時20分）に巡回する
-  const RUN_HOURS_JST = Array.from({ length: 24 }, (_, h) => h);
+  // クラウドのオウセンは1日5回（日本時間 9・12・15・18・21時の20分）巡回する（claude.ai のルーティン。UTC 0・3・6・9・12時）
+  const RUN_HOURS_JST = [9, 12, 15, 18, 21];
   const RUN_MINUTE = 20;
   function nextRun(now) {
     now = now || new Date();
