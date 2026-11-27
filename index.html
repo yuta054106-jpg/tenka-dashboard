@@ -1127,11 +1127,12 @@ function renderApps(apps) {
 // いま見ている欄をヘッダーで示す
 function spy() {
   const y = window.scrollY + 120;
-  let cur = '';
+  // メニューの並びではなく、画面上でいちばん下まで過ぎた欄を選ぶ（会議の欄は要対応の横にあり、並び順で選ぶと下の欄でも「会議」が光った）
+  let cur = '', best = -Infinity;
   for (const [id] of NAV) {
     const el = $(id); if (!el || el.closest('[hidden]')) continue;
     const top = (id === 'sec-asks' && !$('sec-blockers').hidden ? $('sec-blockers') : el).getBoundingClientRect().top + window.scrollY;
-    if (top <= y) cur = id;
+    if (top <= y && top > best) { best = top; cur = id; }
   }
   document.querySelectorAll('.hnav a, .cnav a').forEach((a) => a.classList.toggle('on', a.dataset.sec === cur));
 }
