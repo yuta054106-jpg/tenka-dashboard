@@ -192,7 +192,7 @@
 
   // 受付（00_board/intake/。1件1ファイル、冒頭に「- 状態: 受付中/確定/終了」）。件数だけ使う
   function intake(files) {
-    const list = Object.entries(files).filter(([p]) => /^00_board\/intake\/[^_/][^/]*\.md$/.test(p));
+    const list = Object.entries(files).filter(([p]) => /^00_board\/intake\/[^_/][^/]*\.md$/.test(p) && !/\/README\.md$/.test(p)); // 説明書き（README）は受付に数えない
     return { total: list.length, open: list.filter(([, md]) => /受付中/.test(fields(md).out['状態'] || '')).length };
   }
 

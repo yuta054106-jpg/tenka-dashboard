@@ -917,7 +917,7 @@ function render(s) {
   const r = repoName();
   $('intake').innerHTML = `<div class="k">受付中</div><div class="big">${ik.open}<small>件</small></div>
     ${r ? `<p style="margin-top:8px"><a href="https://github.com/${esc(r)}/issues/new?template=intake.yml" target="_blank" rel="noopener">受付フォームを開く ↗</a></p>` : ''}
-    <p class="sub" style="margin-top:4px">秘密の情報は書かない</p>
+    
     <hr><div class="k">着手待ちの案件（_inbox）</div><div class="big">${s.inbox.length}<small>件</small></div>
     ${s.inbox.length ? `<ul>${s.inbox.map((x) => `<li class="clamp1">${esc(x.name)}</li>`).join('')}</ul>` : ''}`;
 
