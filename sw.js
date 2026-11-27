@@ -1,6 +1,6 @@
 // ホーム画面アプリとして動かすための最小限のサービスワーカー。
 // 画面のファイルだけを保存し、案件データ（GitHub API）は保存しない。
-const CACHE = 'tenka-v3';
+const CACHE = 'tenka-v4';
 const FILES = ['./', 'index.html', 'sprites.js', 'parse.js', 'manifest.webmanifest', 'icon-192.png', 'icon-512.png', 'icon-180.png'];
 self.addEventListener('install', (e) => { e.waitUntil(caches.open(CACHE).then((c) => c.addAll(FILES)).then(() => self.skipWaiting())); });
 self.addEventListener('activate', (e) => {

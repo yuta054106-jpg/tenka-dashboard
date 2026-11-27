@@ -260,6 +260,14 @@
   .dchips select { font: inherit; font-size: 15px; height: 32px; border-radius: 10px; border: 0; background: var(--fill); color: var(--text); padding: 0 8px; }
   .pctl-r { display: flex; gap: 16px; align-items: center; margin-left: auto; }
   .pctl-r .inp { width: 240px; flex: none; }
+  .todo-add { display: flex; gap: 8px; align-items: center; }
+  .todo-add .todo-due { flex: none; width: 150px; }
+  .trow { display: flex; gap: 12px; align-items: center; }
+  .trow .tt { flex: 1 1 auto; min-width: 0; font-size: 15px; }
+  .trow .del { flex: none; width: 36px; padding: 0; color: var(--text-2); font-size: 20px; font-weight: 400; }
+  .trow .del:hover { color: var(--text); }
+  .trow .late { color: #d70015; }
+  @media (max-width: 767px) { .todo-add { flex-wrap: wrap; } .todo-add #todo-t { flex: 1 1 100%; height: 44px; } .todo-add .todo-due { flex: 1 1 auto; width: auto; height: 44px; } .trow .del { width: 44px; height: 44px; } }
   .sw { display: inline-flex; align-items: center; gap: 8px; font-size: 13px; color: var(--text); cursor: pointer; white-space: nowrap; }
   .sw input { position: absolute; opacity: 0; width: 1px; height: 1px; }
   .sw .tr { width: 40px; height: 24px; border-radius: 999px; background: var(--btn-2); position: relative; transition: background .15s; flex: none; }
@@ -466,6 +474,20 @@
         </div>
       </div>
       <div class="card list" id="projects"></div>
+    </section>
+
+    <section class="c12 sep" id="sec-todo">
+      <div class="sec-h"><h2>TODO</h2><span class="cnt" id="todo-n"></span></div>
+      <div class="card list">
+        <form class="lrow todo-add" id="todo-form" autocomplete="off">
+          <label class="vh" for="todo-t">TODO の件名</label>
+          <input class="inp" id="todo-t" maxlength="80" placeholder="やることを入れて「追加」">
+          <label class="vh" for="todo-d">期限（任意）</label>
+          <input class="inp todo-due" id="todo-d" type="date" title="期限（任意）">
+          <button class="btn pri" type="submit">追加</button>
+        </form>
+        <div id="todos"></div>
+      </div>
     </section>
 
     <section class="c8" id="sec-morning" hidden>
@@ -727,7 +749,7 @@ function projRow(p) {
 // ---- 画面の状態（端末に覚える：区分・事業部・開いた行） ----
 let questFilter = store.get('questFilter') || 'すべて';
 let deptFilter = store.get('deptFilter') || 'すべて';
-if (!['すべて', 'Claude', 'GPT', 'TODO'].includes(questFilter)) { deptFilter = questFilter; questFilter = 'すべて'; }
+if (!['すべて', 'Claude', 'GPT'].includes(questFilter)) { deptFilter = questFilter; questFilter = 'すべて'; }
 const openQuests = new Set((() => { try { return JSON.parse(store.get('openQuests') || '[]'); } catch (e) { return []; } })());
 const saveOpen = () => store.set('openQuests', JSON.stringify([...openQuests]));
 let needOnly = false, query = '', projLimit = 20, doneLimit = 20, blkAll = false, recentAll = false, askAll = false, teamAll = false, orgSel = 0, mrOpen = false;
@@ -735,7 +757,7 @@ const openDetails = new Set(); // 開いた <details>（描き直しても開い
 let lastState = null;
 
 // ---- 描画 ----
-const NAV = [['sec-asks', '要対応'], ['sec-projects', '案件'], ['sec-meet', '会議'], ['sec-team', 'チーム'], ['sec-org', '組織']];
+const NAV = [['sec-asks', '要対応'], ['sec-projects', '案件'], ['sec-todo', 'TODO'], ['sec-meet', '会議'], ['sec-team', 'チーム'], ['sec-org', '組織']];
 function renderNav(blkShown) {
   const html = NAV.map(([id, t]) => `<a href="#${id === 'sec-asks' && blkShown ? 'sec-blockers' : id}" data-sec="${id}">${t}</a>`).join('');
   $('hnav').innerHTML = html; $('cnav').innerHTML = html;
@@ -772,7 +794,7 @@ function render(s) {
   const tile = (cls, label, n, href) => `<a class="tile ${n ? cls : ''}" href="#${href}"><div class="k">${label}</div><div class="v">${n}<small>件</small></div></a>`;
   $('summary').innerHTML = `<div class="sum-top">${av('オウセン', 'l', { cls: 'av-sum-l' })}${av('オウセン', 'm', { cls: 'av-sum-s' })}
       <div style="min-width:0"><p class="sum-lead">${esc(lead)}</p><p class="sum-sub tnum">${esc(subline)}</p>${blkShown ? '' : '<p class="sum-ok">障害・遅れはありません</p>'}</div></div>
-    <div class="tiles">${tile('red', '障害', blocked.length, blkShown ? 'sec-blockers' : 'sec-projects')}${tile('org', '遅れ', late.length, blkShown ? 'sec-blockers' : 'sec-projects')}${tile('acc', '確認待ち', openAsks.length, 'sec-asks')}${tile('', '進行中', active.length, 'sec-projects')}</div>`;
+    <div class="tiles">${tile('red', '障害', blocked.length, blkShown ? 'sec-blockers' : 'sec-projects')}${tile('org', '遅れ', late.length, blkShown ? 'sec-blockers' : 'sec-projects')}${tile('acc', '確認待ち', openAsks.length, 'sec-asks')}${tile('', '進行中', active.filter((p) => p.type !== 'TODO').length, 'sec-projects')}</div>`;
 
   // 1.5 最近の動き（直近のコミット。動いていることが目に見えるように）
   const rc = s.recent || [];
@@ -824,7 +846,8 @@ function render(s) {
     ${s.inbox.length ? `<ul>${s.inbox.map((x) => `<li class="clamp1">${esc(x.name)}</li>`).join('')}</ul>` : ''}`;
 
   // 5. 案件
-  renderProjects(active, finished);
+  renderProjects(active.filter((p) => p.type !== 'TODO'), finished.filter((p) => p.type !== 'TODO'));
+  renderTodos(active.filter((p) => p.type === 'TODO'));
 
   // 6. 朝の報告・稼働状況
   renderMorning(s.morning);
@@ -867,11 +890,59 @@ function renderAsks(allAsks, openAsks) {
     + (cutList ? `<div class="more-row"><button class="btn txt" type="button" data-act="ask-all">すべて表示（残り${sorted.length - show.length}件）</button></div>` : '');
 }
 
+// TODO：件名・期限・担当だけの簡素な一覧（2026-11-27 オーナー「案件欄と分けて、追加削除が簡単に」）
+let todoMap = {};
+const todoName = (p) => String(p.name || '').replace(/^TODO[:：]\s*/, '');
+function renderTodos(list) {
+  const isDay = (d) => /^\d{4}-\d{2}-\d{2}/.test(d || '');
+  const items = list.slice().sort((a, b) => (isDay(a.due) ? a.due : '9999').localeCompare(isDay(b.due) ? b.due : '9999') || String(a.path).localeCompare(String(b.path)));
+  todoMap = Object.fromEntries(items.map((p) => [p.path, p]));
+  $('todo-n').textContent = items.length + '件';
+  const today = new Date(Date.now() + 9 * 3600 * 1000).toISOString().slice(0, 10);
+  $('todos').innerHTML = items.length ? items.map((p) => {
+    const over = isDay(p.due) && p.due.slice(0, 10) < today;
+    const who = p.owner && p.owner !== '未割当' ? p.owner : (p.lead || '');
+    return '<div class="lrow trow">'
+      + '<span class="tt clamp1">' + esc(todoName(p)) + '</span>'
+      + (p.stage && p.stage !== '未着手' ? chip('stg', p.stage) : '')
+      + (p.due ? '<span class="sub tnum' + (over ? ' late' : '') + '">' + (over ? '期限切れ ' : '') + esc(fmtDay(p.due)) + '</span>' : '')
+      + (who ? '<span class="sub">' + esc(who) + '</span>' : '')
+      + '<button class="btn txt del" type="button" data-del="' + esc(p.path) + '" aria-label="「' + esc(todoName(p)) + '」を削除" title="削除">×</button>'
+      + '</div>';
+  }).join('') : '<div class="lrow empty">TODO はありません</div>';
+}
+
+async function saveTodo(body) {
+  const at = new Date().toISOString();
+  if (LOCAL) {
+    const r = await fetch('/api/todo', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(Object.assign({}, body, { at })) });
+    if (!r.ok) throw new Error(await r.text());
+    return;
+  }
+  const repo = store.get('gh_repo');
+  const head = { Authorization: 'Bearer ' + store.get('gh_token'), Accept: 'application/vnd.github+json', 'X-GitHub-Api-Version': '2022-11-28' };
+  const url = (f) => 'https://api.github.com/repos/' + repo + '/contents/' + f.split('/').map(encodeURIComponent).join('/');
+  let r;
+  if (body.op === 'add') {
+    const f = Parse.todoPath(body.title, at);
+    r = await fetch(url(f), { method: 'PUT', headers: head, body: JSON.stringify({ message: 'TODO を追加（オーナー）: ' + Parse.todoTitle(body.title), content: utf8Base64(Parse.todoFile(body.title, body.due, at)) }) });
+  } else {
+    if (!Parse.isTodoPath(body.path)) throw new Error('消せない場所です');
+    const g = await fetch(url(body.path), { headers: head, cache: 'no-store' });
+    if (g.status === 404) return; // もう消えている
+    if (!g.ok) throw new Error('GitHub から読めませんでした（' + g.status + '）');
+    const { sha } = await g.json();
+    r = await fetch(url(body.path), { method: 'DELETE', headers: head, body: JSON.stringify({ message: 'TODO を削除（オーナー）: ' + body.path.replace(/^.*\//, '').replace(/\.md$/, ''), sha }) });
+  }
+  if (r.status === 403 || r.status === 404) throw new Error('トークンに書き込みの権限がありません。Contents を「Read and write」にしたトークンを作り直し、「設定」から入れ直してください。');
+  if (!r.ok) throw new Error('GitHub に保存できませんでした（' + r.status + '）');
+}
+
 function renderProjects(active, finished) {
   const srcOf = (p) => p.source || 'Claude';
   const bySrc = (f) => active.filter((p) => f === 'すべて' || (f === 'TODO' ? p.type === 'TODO' : srcOf(p) === f));
   $('proj-n').textContent = `進行中 ${active.length}件`;
-  $('p-seg').innerHTML = ['すべて', 'Claude', 'GPT', 'TODO'].map((f) => `<button type="button" data-seg="${f}" class="${f === questFilter ? 'on' : ''}" aria-pressed="${f === questFilter}">${f} ${bySrc(f).length}</button>`).join('');
+  $('p-seg').innerHTML = ['すべて', 'Claude', 'GPT'].map((f) => `<button type="button" data-seg="${f}" class="${f === questFilter ? 'on' : ''}" aria-pressed="${f === questFilter}">${f} ${bySrc(f).length}</button>`).join('');
   const pool = bySrc(questFilter);
   const depts = {};
   pool.forEach((p) => { if (p.dept && p.source !== 'GPT') depts[p.dept] = (depts[p.dept] || 0) + 1; });
@@ -1116,7 +1187,7 @@ async function stateFromGitHub() {
 }
 
 // 認証の無い閲覧者には案件データを一切出さない（設定の画面だけ。背景にも何も描かない）
-function hideData() { lastState = null; $('app').hidden = true; ['summary', 'blockers', 'asks', 'meetings', 'intake', 'projects', 'morning', 'ops', 'team', 'org', 'apps'].forEach((id) => { $(id).innerHTML = ''; }); }
+function hideData() { lastState = null; $('app').hidden = true; ['summary', 'blockers', 'asks', 'meetings', 'intake', 'projects', 'todos', 'morning', 'ops', 'team', 'org', 'apps'].forEach((id) => { $(id).innerHTML = ''; }); }
 function showSetup(error, clear) {
   if (clear) hideData();
   const guess = /\.github\.io$/.test(location.hostname) ? location.hostname.split('.')[0] + '/ai-company' : '';
@@ -1236,6 +1307,34 @@ $('asks').addEventListener('click', async (ev) => {
     say(e.message);
     btn.closest('.ans').querySelectorAll('button,input').forEach((el) => { el.disabled = false; });
   }
+});
+
+$('todo-form').onsubmit = async (ev) => {
+  ev.preventDefault();
+  const title = $('todo-t').value.trim();
+  if (!title) { $('todo-t').focus(); return; }
+  const btn = ev.target.querySelector('button');
+  btn.disabled = true;
+  try {
+    await saveTodo({ op: 'add', title, due: $('todo-d').value });
+    $('todo-t').value = ''; $('todo-d').value = '';
+    say('TODO を追加しました。');
+    setTimeout(load, LOCAL ? 1500 : 2500);
+  } catch (e) { say(e.message); }
+  btn.disabled = false;
+};
+$('todos').addEventListener('click', async (ev) => {
+  const b = ev.target.closest('button[data-del]');
+  if (!b) return;
+  const p = todoMap[b.dataset.del];
+  if (!p || !confirm('「' + todoName(p) + '」を削除しますか？\n（記録は git の履歴に残ります）')) return;
+  b.disabled = true;
+  try {
+    await saveTodo({ op: 'del', path: p.path });
+    b.closest('.trow').remove();
+    say('TODO を削除しました。');
+    setTimeout(load, LOCAL ? 1500 : 2500);
+  } catch (e) { say(e.message); b.disabled = false; }
 });
 
 $('setup-form').onsubmit = (ev) => {

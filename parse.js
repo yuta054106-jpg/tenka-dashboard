@@ -500,7 +500,46 @@
   // 回答ファイルの置き場所（日時と ID で一意にする）
   const answerPath = (ask, at) => `00_board/answers/${at.replace(/[-:]/g, '').slice(0, 15)}_${ask.id}.md`;
 
-  const api = { wanted, narrow, buildState, answerFile, answerPath };
+  // ダッシュボードから足す TODO（2026-11-27 オーナー「TODO は案件欄と分けて、追加削除を簡単に」）
+  const jst = (at) => new Date(Date.parse(at) + 9 * 3600 * 1000).toISOString();
+  const todoTitle = (s) => String(s || '').replace(/[\r\n]+/g, ' ').trim().slice(0, 80);
+  const todoPath = (title, at) => {
+    const t = jst(at);
+    const name = todoTitle(title).replace(/[\\/:*?"<>|#%{}^~\[\]\x60]/g, '').replace(/\s+/g, '_').replace(/^[._]+/, '').slice(0, 40) || 'TODO';
+    return '05_projects/_todo/T-' + t.slice(0, 10).replace(/-/g, '') + '-' + t.slice(11, 19).replace(/:/g, '') + '_' + name + '.md';
+  };
+  // 消してよいのは _todo の T- で始まる1件1ファイルだけ（README・_template は消さない）
+  const isTodoPath = (f) => /^05_projects\/_todo\/T-[^/\\]+\.md$/.test(String(f || '')) && !/\.\./.test(f);
+  function todoFile(title, due, at) {
+    const d = /^\d{4}-\d{2}-\d{2}$/.test(due || '') ? due : '';
+    const day = jst(at).slice(0, 10);
+    return [
+      '# TODO: ' + todoTitle(title),
+      '',
+      '- 種別: TODO',
+      '- 責任者: オウセン',
+      '- 担当: 未割当',
+      '- 事業部: ',
+      '- 優先度: 中',
+      '- 期限: ' + d,
+      '- 次回確認日: ',
+      '- 状態: 未着手',
+      '- 進捗: ',
+      '- 次の行動: ',
+      '- 障害: ',
+      '- 親案件: ',
+      '- 最終更新: ' + day,
+      '',
+      '## 中身',
+      '- ',
+      '',
+      '## ログ',
+      '- ' + day + ' オーナー: ダッシュボードから追加',
+      '',
+    ].join('\n');
+  }
+
+  const api = { wanted, narrow, buildState, answerFile, answerPath, todoFile, todoPath, isTodoPath, todoTitle };
   if (typeof module !== 'undefined' && module.exports) module.exports = api;
   else root.Parse = api;
 })(this);
