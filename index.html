@@ -416,7 +416,12 @@
   .setup .err { color: var(--red-t); min-height: 1.6em; margin-top: 8px; font-size: 13px; }
   .setup .actions { display: flex; justify-content: flex-end; gap: 8px; margin-top: 8px; }
 
-  @media (prefers-reduced-motion: reduce) { *, *::before, *::after { transition: none !important; animation: none !important; } }
+  /* apple-design（2026-11-27 取り込み）§1 押した瞬間に応える／§14 動き・透明・コントラストの設定に従う */
+  .btn:active:not(:disabled), .seg button:active, .dchips button:active { transform: scale(0.97); transition: transform 100ms ease-out; }
+  .click:active { background: var(--fill); }
+  @media (prefers-reduced-transparency: reduce) { .hdr { background: var(--bg, #FFFFFF); -webkit-backdrop-filter: none; backdrop-filter: none; } }
+  @media (prefers-contrast: more) { .chip { border: 1px solid currentColor; } .card { outline: 1px solid var(--text-2); } }
+  @media (prefers-reduced-motion: reduce) { *, *::before, *::after { transition: none !important; animation: none !important; } .btn:active, .seg button:active, .dchips button:active { transform: none; } }
 </style>
 </head>
 <body>
@@ -658,7 +663,9 @@ function stateChips(p, i) {
   if (i.unsynced !== null) h += chip('pur', i.unsynced < 0 ? '未同期' : `未同期・${i.unsynced}時間前`);
   return h;
 }
-function stageChip(p) { return p.stage === '止まっている' ? chip('red', p.stage) : chip('stg', p.stage); }
+// 状態の色は1組（Paperclip の DESIGN.md「Status is systematic」を写した）：止まっている＝赤、検査中＝紫、納品待ち・完了＝緑、まだ＝灰、手を動かしている＝無地
+const STAGE_TONE = { '止まっている': 'red', 'blocked': 'red', 'テスト': 'pur', '検査中': 'pur', 'in_review': 'pur', '納品待ち': 'grn', '納品済み': 'grn', '完了': 'grn', 'done': 'grn', '要件定義': 'gry', '未着手': 'gry', '待ち': 'gry', 'todo': 'gry', '中止': 'gry' };
+function stageChip(p) { return chip(STAGE_TONE[p.stage] || 'stg', p.stage); }
 function srcChip(p) { return p.source === 'GPT' ? '<span class="chip gp c-src">GPT</span>' : '<span class="chip cl c-src">Claude</span>'; }
 function dueHtml(i) {
   if (!i.dl) return `<span class="sub">期限</span> ${NONE}`;
@@ -904,7 +911,7 @@ function renderTodos(list) {
     const who = p.owner && p.owner !== '未割当' ? p.owner : (p.lead || '');
     return '<div class="lrow trow">'
       + '<span class="tt clamp1">' + esc(todoName(p)) + '</span>'
-      + (p.stage && p.stage !== '未着手' ? chip('stg', p.stage) : '')
+      + (p.stage && p.stage !== '未着手' ? stageChip(p) : '')
       + (p.due ? '<span class="sub tnum' + (over ? ' late' : '') + '">' + (over ? '期限切れ ' : '') + esc(fmtDay(p.due)) + '</span>' : '')
       + (who ? '<span class="sub">' + esc(who) + '</span>' : '')
       + '<button class="btn txt del" type="button" data-del="' + esc(p.path) + '" aria-label="「' + esc(todoName(p)) + '」を削除" title="削除">×</button>'
