@@ -10,6 +10,7 @@
       || /^05_projects\/_inbox\/[^_/][^/]*\.md$/.test(p)
       || (/^05_projects\/_gpt\/[^_/][^/]*\.md$/.test(p) && !/\/README\.md$/.test(p))
       || (/^05_projects\/_todo\/[^_/][^/]*\.md$/.test(p) && !/\/README\.md$/.test(p))
+      || /^05_projects\/_job\/J-[^/]+\.md$/.test(p) // ジョブ票（B案：tools/job/job.mjs が書き換える）
       || /^05_projects\/_応募候補\/(done\/)?\d{4}-\d{2}-\d{2}[^/]*\.md$/.test(p)
       || /^00_board\/decisions\/[^_/][^/]*\.md$/.test(p)
       || /^03_reports\/(daily|weekly|monthly|morning)\/\d{4}-\d{2}-\d{2}[^/]*\.md$/.test(p)
@@ -452,6 +453,36 @@
       });
   }
 
+  // ジョブ票（AI の実働）：状態欄は「## 」見出しより前だけ読む（tools/job/job.mjs と同じ決まり）
+  function jobs(files) {
+    const out = [];
+    for (const [p, md] of Object.entries(files)) {
+      const m = p.match(/^05_projects\/_job\/(J-[^/]+)\.md$/);
+      if (!m || !md) continue;
+      const lines = md.split(/\r?\n/);
+      const end = lines.findIndex((l) => /^## /.test(l));
+      const f = {};
+      for (const l of lines.slice(0, end < 0 ? lines.length : end)) {
+        const x = l.match(/^- ([^:：]+)[:：] ?(.*)$/);
+        if (x && !(x[1].trim() in f)) f[x[1].trim()] = x[2].trim();
+      }
+      const logs = (md.match(/^- \d{4}-\d{2}-\d{2}T[^\n]*/gm) || []);
+      const lastLog = logs.length ? logs[logs.length - 1].replace(/^- /, '') : '';
+      out.push({
+        id: m[1].split('_')[0], path: p,
+        name: (title(md) || m[1]).replace(/^ジョブ票\s*J-[^：:]*[：:]\s*/, ''),
+        state: String(f['状態'] || '').split(/[\s（(]/)[0] || 'todo',
+        lead: f['責任者'] || '', assignee: f['担当'] || '', engine: f['担当エンジン'] || '',
+        run: f['実行ID'] || '', lockedAt: f['鍵の時刻'] || '',
+        commit: f['成果物コミット'] || '', reviewer: f['検査者'] || '', reviewEngine: f['検査エンジン'] || '',
+        result: f['検査結果'] || '', returns: parseInt(f['差し戻し回数'], 10) || 0,
+        delivered: f['納品'] || '', received: f['受付日時'] || '',
+        lastAt: lastLog.slice(0, 24), lastLog: lastLog.replace(/^\S+\s/, '').replace(/（op-[^）]+）$/, ''),
+      });
+    }
+    return out.sort((a, b) => String(b.id).localeCompare(String(a.id)));
+  }
+
   function buildState(files, extra) {
     extra = extra || {};
     let hb = null;
@@ -461,6 +492,7 @@
       company: companyName(files),
       repo: extra.repo || '',
       projects: list,
+      jobs: jobs(files),
       meetings: meetings(files),
       intake: intake(files),
       org: org(files),

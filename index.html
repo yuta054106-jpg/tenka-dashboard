@@ -260,6 +260,13 @@
   .dchips select { font: inherit; font-size: 15px; height: 32px; border-radius: 10px; border: 0; background: var(--fill); color: var(--text); padding: 0 8px; }
   .pctl-r { display: flex; gap: 16px; align-items: center; margin-left: auto; }
   .pctl-r .inp { width: 240px; flex: none; }
+  .jrow { display: grid; grid-template-columns: auto 1fr auto; gap: 4px 12px; align-items: center; }
+  .jrow .jid { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 13px; color: var(--text-2); }
+  .jrow .jn { font-size: 15px; font-weight: 700; min-width: 0; }
+  .jrow .jflow { grid-column: 1 / -1; display: flex; flex-wrap: wrap; gap: 6px 16px; font-size: 13px; color: var(--text-2); }
+  .jrow .jflow b { color: var(--text); font-weight: 600; }
+  .jrow .mono { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; }
+  .jcount { display: flex; flex-wrap: wrap; gap: 8px; padding: 12px var(--pad) 0; }
   .todo-add { display: flex; gap: 8px; align-items: center; }
   .todo-add .todo-due { flex: none; width: 150px; }
   .trow { display: flex; gap: 12px; align-items: center; }
@@ -479,6 +486,11 @@
         </div>
       </div>
       <div class="card list" id="projects"></div>
+    </section>
+
+    <section class="c12 sep" id="sec-jobs">
+      <div class="sec-h"><h2>ジョブ（AI の実働）</h2><span class="cnt" id="job-n"></span></div>
+      <div class="card list" id="jobs"></div>
     </section>
 
     <section class="c12 sep" id="sec-todo">
@@ -764,7 +776,7 @@ const openDetails = new Set(); // 開いた <details>（描き直しても開い
 let lastState = null;
 
 // ---- 描画 ----
-const NAV = [['sec-asks', '要対応'], ['sec-projects', '案件'], ['sec-todo', 'TODO'], ['sec-meet', '会議'], ['sec-team', 'チーム'], ['sec-org', '組織']];
+const NAV = [['sec-asks', '要対応'], ['sec-projects', '案件'], ['sec-jobs', 'ジョブ'], ['sec-todo', 'TODO'], ['sec-meet', '会議'], ['sec-team', 'チーム'], ['sec-org', '組織']];
 function renderNav(blkShown) {
   const html = NAV.map(([id, t]) => `<a href="#${id === 'sec-asks' && blkShown ? 'sec-blockers' : id}" data-sec="${id}">${t}</a>`).join('');
   $('hnav').innerHTML = html; $('cnav').innerHTML = html;
@@ -855,6 +867,7 @@ function render(s) {
   // 5. 案件
   renderProjects(active.filter((p) => p.type !== 'TODO'), finished.filter((p) => p.type !== 'TODO'));
   renderTodos(active.filter((p) => p.type === 'TODO'));
+  renderJobs(s.jobs || []);
 
   // 6. 朝の報告・稼働状況
   renderMorning(s.morning);
@@ -895,6 +908,29 @@ function renderAsks(allAsks, openAsks) {
           </div>`}
     </div>`).join('') : '<div class="empty">ありません</div>')
     + (cutList ? `<div class="more-row"><button class="btn txt" type="button" data-act="ask-all">すべて表示（残り${sorted.length - show.length}件）</button></div>` : '');
+}
+
+// ジョブ（AI の実働）：ジョブ票の状態をそのまま出す。推測で進捗を作らない（Paperclip の「表示と実際の実行状態を一致させる」）
+const JOB_STATE = { todo: ['gry', '依頼'], in_progress: ['stg', '着手'], in_review: ['pur', '検査中'], done: ['grn', '納品済み'], blocked: ['red', '止まっている'], cancelled: ['gry', '中止'] };
+function renderJobs(list) {
+  const cnt = {};
+  list.forEach((j) => { cnt[j.state] = (cnt[j.state] || 0) + 1; });
+  $('job-n').textContent = list.length + '件';
+  const head = list.length ? '<div class="jcount">' + Object.keys(JOB_STATE).filter((k) => cnt[k]).map((k) => chip(JOB_STATE[k][0], JOB_STATE[k][1] + ' ' + cnt[k])).join('') + '</div>' : '';
+  const eng = (e) => (e === 'codex' ? 'Codex' : e === 'claude' ? 'Claude' : e || '');
+  const rows = list.slice(0, 20).map((j) => {
+    const [tone, label] = JOB_STATE[j.state] || ['stg', j.state];
+    const flow = [
+      j.assignee ? '実行 <b>' + esc(j.assignee) + '</b>（' + esc(eng(j.engine)) + '）' : '実行 未割当',
+      j.commit ? '成果 <span class="mono">' + esc(j.commit.slice(0, 7)) + '</span>' : '',
+      j.reviewer ? '検査 <b>' + esc(j.reviewer) + '</b>（' + esc(eng(j.reviewEngine)) + '）' + (j.result ? '・' + esc(j.result) : '') : (j.state === 'in_review' ? '検査 待ち' : ''),
+      j.returns ? '差し戻し ' + j.returns + '回' : '',
+      j.lastAt && !isNaN(Date.parse(j.lastAt)) ? '最終 <span class="tnum">' + esc(fmtDay(new Date(Date.parse(j.lastAt) + 9 * 3600 * 1000).toISOString().replace('T', ' ').slice(0, 16))) + '</span>' : '',
+    ].filter(Boolean).map((x) => '<span>' + x + '</span>').join('');
+    return '<div class="lrow jrow">' + chip(tone, label) + '<span class="jn clamp1">' + esc(j.name) + '</span><span class="jid">' + esc(j.id) + '</span>'
+      + '<div class="jflow">' + flow + '</div></div>';
+  }).join('');
+  $('jobs').innerHTML = list.length ? head + rows : '<div class="lrow empty">ジョブはまだありません（05_projects/_job/ のジョブ票）</div>';
 }
 
 // TODO：件名・期限・担当だけの簡素な一覧（2026-11-27 オーナー「案件欄と分けて、追加削除が簡単に」）
@@ -1194,7 +1230,7 @@ async function stateFromGitHub() {
 }
 
 // 認証の無い閲覧者には案件データを一切出さない（設定の画面だけ。背景にも何も描かない）
-function hideData() { lastState = null; $('app').hidden = true; ['summary', 'blockers', 'asks', 'meetings', 'intake', 'projects', 'todos', 'morning', 'ops', 'team', 'org', 'apps'].forEach((id) => { $(id).innerHTML = ''; }); }
+function hideData() { lastState = null; $('app').hidden = true; ['summary', 'blockers', 'asks', 'meetings', 'intake', 'projects', 'jobs', 'todos', 'morning', 'ops', 'team', 'org', 'apps'].forEach((id) => { $(id).innerHTML = ''; }); }
 function showSetup(error, clear) {
   if (clear) hideData();
   const guess = /\.github\.io$/.test(location.hostname) ? location.hostname.split('.')[0] + '/ai-company' : '';
